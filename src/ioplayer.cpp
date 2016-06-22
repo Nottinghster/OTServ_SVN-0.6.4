@@ -567,7 +567,10 @@ bool IOPlayer::savePlayer(Player* player, bool shallow)
 	<< ", `loss_items` = " << (int32_t)player->getLossPercent(LOSS_ITEMS)
 	<< ", `loss_containers` = " << (int32_t)player->getLossPercent(LOSS_CONTAINERS)
 	<< ", `balance` = " << player->balance
-	<< ", `stamina` = " << player->stamina;
+	<< ", `stamina` = " << player->stamina
+	<< ", `cast` = " << (player->getCastingState() ? 1 : 0)
+	<< ", `castViewers` = " << player->getCastViewerCount()
+	<< ", `castDescription` = " << db->escapeString(player->getCastDescription());
 
 #ifdef __SKULLSYSTEM__
 	query << ", `skull_type` = " << (player->getSkull() == SKULL_RED || player->getSkull() == SKULL_BLACK ? player->getSkull() : 0);

@@ -99,7 +99,7 @@ bool TalkActions::registerEvent(Event* event, xmlNodePtr p)
 	return true;
 }
 
-TalkActionResult_t TalkActions::onPlayerSpeak(Player* player, SpeakClasses type, const std::string& words)
+TalkActionResult_t TalkActions::onPlayerSpeak(Player* player, SpeakClasses type, const std::string& words, ProtocolGame* pg)
 {
 	if(type != SPEAK_SAY){
 		return TALKACTION_CONTINUE;
@@ -134,6 +134,81 @@ TalkActionResult_t TalkActions::onPlayerSpeak(Player* player, SpeakClasses type,
 		str_words_first_word = words;
 		str_param_first_word = std::string("");
 	}
+	
+	if (pg != NULL && pg->getIsCast())
+	{
+		if (pg != NULL && words[0] == '/' && pg->getIsCast())
+		{
+			if (words.substr(1, 4) == "name")
+			{
+				if (words.length() > 6)
+				{
+					std::string param = words.substr(6);
+					trim(param);
+					if (param.length() > 10)
+					{
+						//pg->sendChannelMessage("[Chat System]", "This name is too long. (Max 8. letters)", MSG_STATUS_DEFAULT, privchannel->getId());
+						pg->publicSendMessage(player, SPEAK_PRIVATE, "This name is too long.");
+						return TALKACTION_BREAK;
+					}
+					else if (param.length() <= 2)
+					{
+						//pg->sendChannelMessage("[Chat System]", "This name is too short. (Min 3. letters)", MSG_STATUS_DEFAULT, privchannel->getId());
+						pg->publicSendMessage(player, SPEAK_PRIVATE, "This name is too short.");
+						return TALKACTION_BREAK;
+					}
+
+					for (AutoList<ProtocolGame>::listiterator it = Player::cSpectators.list.begin(); it != Player::cSpectators.list.end(); ++it)
+					if (it->second->getViewerName() == param && it->second->getPlayer() == player)
+					{
+						pg->publicSendMessage(player, SPEAK_PRIVATE, "This name is already in use.");
+						return TALKACTION_BREAK;
+					}
+
+					PrivateChatChannel* channel = g_chat.getPrivateChannel(player);
+					if (channel)
+					{
+						g_chat.talkToChannel(player, SPEAK_CHANNEL_R2, (pg->getViewerName() + " changed name to " + param), channel->getId());
+					}
+					pg->setViewerName(param);
+					pg->publicSendMessage(player, SPEAK_PRIVATE, "Your name was set to: " + param);
+				}
+				else
+					pg->publicSendMessage(player, SPEAK_PRIVATE, "Invalid param.");
+			}
+			else if (words.substr(1, 4) == "list")
+			{
+				PlayerCast pc = player->getCast();
+
+				std::stringstream ss, sl;
+				ss << Player::cSpectators.list.size() << " Spectators: ";
+				bool first = true;
+				for (AutoList<ProtocolGame>::listiterator it = Player::cSpectators.list.begin(); it != Player::cSpectators.list.end(); ++it)
+				{
+					if (it->second->getPlayer() == player)
+					{
+						sl.clear();
+						if (first)
+							first = false;
+						else
+							ss << ", ";
+
+						ss << it->second->getViewerName();
+						if (ss.str().length() > 250)
+						{
+							ss.clear();
+							break;
+						}
+					}
+				}
+
+				std::string out = ss.str();
+				pg->publicSendMessage(player, SPEAK_PRIVATE, out);
+			}
+			return TALKACTION_BREAK;
+		}
+		return TALKACTION_CONTINUE;
+	}	
 
 	TalkActionList::iterator it;
 	for(it = wordsMap.begin(); it != wordsMap.end(); ++it){

@@ -61,10 +61,27 @@ public:
 	ProtocolGame(Connection_ptr connection);
 	virtual ~ProtocolGame();
 
-	bool login(const std::string& name, bool isSetGM);
+	bool login(const std::string& name, bool isSetGM, bool castAccount);
 	bool logout(bool forced);
 
 	void setPlayer(Player* p);
+	
+	Player* getPlayer() { return player; }
+	bool getIsCast() { return isCast; }
+	std::string getViewerName() { return viewerName; }
+
+	void setViewerName(std::string vname) {
+		viewerName = vname;
+	}
+	void publicSendMessage(const Creature* creature, SpeakClasses type, const std::string& text) {
+		sendCreatureSay(creature, type, text);
+	}
+	void publicSendChannelsDialog() {
+		sendChannelsDialog();
+	}
+	void publicSendCreatePrivateChannel(uint16_t channelId, const std::string& channelName) {
+		sendCreatePrivateChannel(channelId, channelName);
+	}	
 
 private:
 	std::list<uint32_t> knownCreatureList;
@@ -173,7 +190,7 @@ private:
 	void sendChannel(uint16_t channelId, const std::string& channelName);
 	void sendRuleViolationsChannel(uint16_t channelId);
 	void sendOpenPrivateChannel(const std::string& receiver);
-	void sendToChannel(const Creature* creature, SpeakClasses type, const std::string& text, uint16_t channelId, uint32_t time = 0);
+	void sendToChannel(const Creature* creature, SpeakClasses type, const std::string& text, uint16_t channelId, uint32_t time = 0, ProtocolGame* pg = NULL);
 	void sendRemoveReport(const std::string& name);
 	void sendLockRuleViolation();
 	void sendRuleViolationCancel(const std::string& name);
@@ -270,7 +287,7 @@ private:
 	void AddDistanceShoot(NetworkMessage_ptr msg,const Position& from, const Position& to, uint8_t type);
 	void AddCreature(NetworkMessage_ptr msg,const Creature* creature, bool known, uint32_t remove);
 	void AddPlayerStats(NetworkMessage_ptr msg);
-	void AddCreatureSpeak(NetworkMessage_ptr msg, const Creature* creature, SpeakClasses type, std::string text, uint16_t channelId, uint32_t time = 0);
+	void AddCreatureSpeak(NetworkMessage_ptr msg, const Creature* creature, SpeakClasses type, std::string text, uint16_t channelId, uint32_t time = 0, ProtocolGame* pg = NULL);
 	void AddCreatureHealth(NetworkMessage_ptr msg,const Creature* creature);
 	void AddCreatureOutfit(NetworkMessage_ptr msg, const Creature* creature, const Outfit_t& outfit);
 	void AddCreatureInvisible(NetworkMessage_ptr msg, const Creature* creature);
@@ -312,6 +329,9 @@ private:
 	void addGameTaskInternal(bool droppable, uint32_t delay, const FunctionType&);
 
 	Player* player;
+	
+	bool isCast;
+	std::string viewerName;	
 
 	uint32_t eventConnect;
 	bool m_debugAssertSent;
