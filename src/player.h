@@ -44,9 +44,36 @@ class SchedulerTask;
 class Guild;
 
 enum skillsid_t {
-	SKILL_LEVEL=0,
-	SKILL_TRIES=1,
-	SKILL_PERCENT=2
+	SKILL_LEVEL = 0,
+	SKILL_TRIES = 1,
+	SKILL_PERCENT = 2
+};
+
+struct CastBan
+{
+	std::string name;
+	uint32_t ip;
+
+	CastBan(std::string n, uint32_t _ip) {
+		name = n;
+		ip = _ip;
+	}
+};
+
+struct PlayerCast
+{
+	uint16_t curId;
+	bool isCasting;
+	std::string password;
+	std::string description;
+
+	std::list<CastBan> muted;
+	std::list<CastBan> bans;
+
+	PlayerCast() {
+		isCasting = false;
+		curId = 1;
+	}
 };
 
 enum playerinfo_t {
@@ -123,9 +150,113 @@ public:
 	static ChannelStatementMap channelStatementMap;
 	static uint32_t channelStatementGuid;
 
+	bool getCastingState() const { return cast.isCasting; };
+	virtual const std::string& getCastingPassword() const { return cast.password; };
+	PlayerCast getCast() { return cast; }
+
+	void setCasting(bool c);
+	void setCastPassword(std::string p) { cast.password = p; };
+
+	void setCastDescription(std::string desc) { cast.description = desc; }
+	virtual const std::string& getCastDescription() const { return cast.description; }
+
+	void addCastViewer(ProtocolGame* pg) {
+		cSpectators.list[nextSpectator] = pg;
+		nextSpectator++;
+
+		std::stringstream ss;
+		ss << "Spectator" << cast.curId;
+		pg->viewerName = ss.str().c_str();
+		cast.curId++;
+	}
+	
+	void removeCastViewer(uint32_t id) { cSpectators.removeList(id); }
+
+	uint32_t getCastIpByName(std::string n) {
+		for (AutoList<ProtocolGame>::listiterator it = cSpectators.list.begin(); it != cSpectators.list.end(); ++it)
+			if (it->second->getViewerName() == n && it->second->getPlayer() == this)
+				return it->second->getIP();
+
+		return NULL;
+	}
+
+	uint32_t getCastViewerCount() {
+		uint32_t count = 0;
+		for (AutoList<ProtocolGame>::listiterator it = cSpectators.list.begin(); it != cSpectators.list.end(); ++it)
+			if (it->second->getPlayer() == this)
+				count++;
+
+		return count;
+	}
+
+	void kickCastViewers() {
+		for (AutoList<ProtocolGame>::listiterator it = cSpectators.list.begin(); it != cSpectators.list.end(); ++it) {
+			if (it->second->getPlayer() == this) {
+				it->second->disconnect();
+				it->second->unRef();
+				removeCastViewer(it->first);
+			}
+		}
+		cast = PlayerCast();
+	}
+
+	void kickCastViewerByName(std::string n) {
+		for (AutoList<ProtocolGame>::listiterator it = cSpectators.list.begin(); it != cSpectators.list.end(); ++it)
+			if (it->second->getPlayer() == this)
+				if (it->second->getViewerName() == n && it->second->getPlayer() == this) {
+					it->second->disconnect();
+					it->second->unRef();
+					removeCastViewer(it->first);
+				}
+	}
+
+	bool addCastBan(std::string n) {
+		uint32_t ip = getCastIpByName(n);
+		if (!ip)
+			return false;
+
+		cast.bans.push_back(CastBan(n, ip));
+		kickCastViewerByName(n);
+		return true;
+	}
+
+	bool removeCastBan(std::string n) {
+		for (std::list<CastBan>::iterator it = cast.bans.begin(); it != cast.bans.end(); ++it)
+			if (asLowerCaseString(it->name) == asLowerCaseString(n)) {
+				cast.bans.erase(it);
+				return true;
+			}
+
+		return false;
+	}
+
+	bool addCastMute(std::string n) {
+		uint32_t ip = getCastIpByName(n);
+		if (!ip)
+			return false;
+
+		cast.muted.push_back(CastBan(n, ip));
+		return true;
+	}
+
+	bool removeCastMute(std::string n) {
+		for (std::list<CastBan>::iterator it = cast.muted.begin(); it != cast.muted.end(); ++it) {
+			std::clog << it->name << " . " << n << std::endl;
+			if (asLowerCaseString(it->name) == asLowerCaseString(n)) {
+				cast.muted.erase(it);
+				return true;
+			}
+		}
+		return false;
+	}	
+	
 	virtual const std::string& getName() const {return name;}
 	virtual const std::string& getNameDescription() const {return name;}
 	virtual std::string getDescription(int32_t lookDistance) const;
+	
+	static AutoList<Player> castAutoList;
+	static AutoList<ProtocolGame> cSpectators;
+	static uint32_t nextSpectator;	
 
 	void setGUID(uint32_t _guid) {guid = _guid;};
 	uint32_t getGUID() const { return guid;};
@@ -170,7 +301,14 @@ public:
 
 	bool isOffline() const {return (getID() == 0);}
 	bool isOnline() const {return !isOffline();}
-	void disconnect() {if(client) client->disconnect();}
+	void disconnect() {
+		if (client) {
+			client->disconnect();
+			for (AutoList<ProtocolGame>::listiterator it = cSpectators.list.begin(); it != cSpectators.list.end(); ++it)
+				if (it->second->getPlayer() == this)
+					it->second->disconnect();
+		}
+	}
 	uint32_t getIP() const;
 
 	virtual float getGainExpMultiplierDueType() const { return vocation->getExpMultiplier(); };
@@ -476,32 +614,105 @@ public:
 	//tile
 	//send methods
 	void sendAddTileItem(const Tile* tile, const Position& pos, const Item* item)
-	{if(client) client->sendAddTileItem(tile, pos, tile->getClientIndexOfThing(this, item), item);}
+	{
+		if (client) {
+			client->sendAddTileItem(tile, pos, tile->getClientIndexOfThing(this, item), item);
+			for (AutoList<ProtocolGame>::listiterator it = cSpectators.list.begin(); it != cSpectators.list.end(); ++it) 
+				if (it->second->getPlayer() == this)
+					it->second->sendAddTileItem(tile, pos, tile->getClientIndexOfThing(this, item), item);
+		}
+	}
 	void sendUpdateTileItem(const Tile* tile, const Position& pos, const Item* olditem, const Item* newitem)
-	{if(client) client->sendUpdateTileItem(tile, pos, tile->getClientIndexOfThing(this, newitem), newitem);}
+	{
+		if (client){
+			client->sendUpdateTileItem(tile, pos, tile->getClientIndexOfThing(this, newitem), newitem);
+			for (AutoList<ProtocolGame>::listiterator it = cSpectators.list.begin(); it != cSpectators.list.end(); ++it)
+				if (it->second->getPlayer() == this)
+					client->sendUpdateTileItem(tile, pos, tile->getClientIndexOfThing(this, newitem), newitem);
+		}
+	}
 	void sendRemoveTileItem(const Tile* tile, const Position& pos, uint32_t stackpos, const Item* item)
-		{if(client) client->sendRemoveTileItem(tile, pos, stackpos);}
+	{
+		if (client) {
+			client->sendRemoveTileItem(tile, pos, stackpos);
+			for (AutoList<ProtocolGame>::listiterator it = cSpectators.list.begin(); it != cSpectators.list.end(); ++it)
+				if (it->second->getPlayer() == this)
+					it->second->sendRemoveTileItem(tile, pos, stackpos);
+		}
+	}
 	void sendUpdateTile(const Tile* tile, const Position& pos)
-		{if(client) client->sendUpdateTile(tile, pos);}
-
-	void sendCreatureAppear(const Creature* creature, const Position& pos)
-		{if(client) client->sendAddCreature(creature, pos, creature->getTile()->getClientIndexOfThing(this, creature));}
+	{
+		if (client) {
+			client->sendUpdateTile(tile, pos);
+			for (AutoList<ProtocolGame>::listiterator it = cSpectators.list.begin(); it != cSpectators.list.end(); ++it)
+				if (it->second->getPlayer() == this)
+					it->second->sendUpdateTile(tile, pos);
+		}
+	}
+	void sendCreatureAppear(const Creature* creature, const Position& pos, bool isLoggingIn)
+	{
+		if (client) {
+			client->sendAddCreature(creature, pos, creature->getTile()->getClientIndexOfThing(this, creature), isLoggingIn);
+			for (AutoList<ProtocolGame>::listiterator it = cSpectators.list.begin(); it != cSpectators.list.end(); ++it) 
+				if (it->second->getPlayer() == this)
+					it->second->sendAddCreature(creature, pos, creature->getTile()->getClientIndexOfThing(this, creature), isLoggingIn);
+		}
+	}
 	void sendCreatureDisappear(const Creature* creature, uint32_t stackpos, bool isLogout)
-		{if(client) client->sendRemoveCreature(creature, creature->getPosition(),
-			stackpos, isLogout);}
+	{
+		if (client){
+			client->sendRemoveCreature(creature, creature->getPosition(),stackpos, isLogout);
+			for (AutoList<ProtocolGame>::listiterator it = cSpectators.list.begin(); it != cSpectators.list.end(); ++it)
+				if (it->second->getPlayer() == this)
+					it->second->sendRemoveCreature(creature, creature->getPosition(), stackpos, isLogout);
+		}
+	}
 	void sendCreatureMove(const Creature* creature, const Tile* newTile, const Position& newPos,
 		const Tile* oldTile, const Position& oldPos, uint32_t oldStackPos, bool teleport)
-		{if(client) client->sendMoveCreature(creature, newTile, newPos, newTile->getClientIndexOfThing(this, creature),
-		oldTile, oldPos, oldStackPos, teleport);}
-
+	{
+		if (client){
+			client->sendMoveCreature(creature, newTile, newPos, newTile->getClientIndexOfThing(this, creature),
+			oldTile, oldPos, oldStackPos, teleport);
+			for (AutoList<ProtocolGame>::listiterator it = cSpectators.list.begin(); it != cSpectators.list.end(); ++it)
+				if (it->second->getPlayer() == this)
+					it->second->sendMoveCreature(creature, newTile, newPos, newTile->getClientIndexOfThing(this, creature), oldTile, oldPos, oldStackPos, teleport);
+		}
+	}
 	void sendCreatureTurn(const Creature* creature)
-		{if(client) client->sendCreatureTurn(creature, creature->getTile()->getClientIndexOfThing(this, creature));}
+	{
+		if (client) {
+			client->sendCreatureTurn(creature, creature->getTile()->getClientIndexOfThing(this, creature));
+			for (AutoList<ProtocolGame>::listiterator it = cSpectators.list.begin(); it != cSpectators.list.end(); ++it)
+				if (it->second->getPlayer() == this)
+					it->second->sendCreatureTurn(creature, creature->getTile()->getClientIndexOfThing(this, creature));
+		}
+	}
 	void sendCreatureSay(const Creature* creature, SpeakClasses type, const std::string& text)
-		{if(client) client->sendCreatureSay(creature, type, text);}
+	{
+		if (client) {
+			client->sendCreatureSay(creature, type, text);
+			for (AutoList<ProtocolGame>::listiterator it = cSpectators.list.begin(); it != cSpectators.list.end(); ++it)
+				if (it->second->getPlayer() == this)
+					it->second->sendCreatureSay(creature, type, text);
+		}
+	}
 	void sendCreatureSquare(const Creature* creature, SquareColor_t color)
-		{if(client) client->sendCreatureSquare(creature, color);}
+	{
+		if (client) {client->sendCreatureSquare(creature, color);
+		for (AutoList<ProtocolGame>::listiterator it = cSpectators.list.begin(); it != cSpectators.list.end(); ++it)
+			if (it->second->getPlayer() == this)
+				it->second->sendCreatureSquare(creature, color);
+		}
+	}
 	void sendCreatureChangeOutfit(const Creature* creature, const Outfit_t& outfit)
-		{if(client) client->sendCreatureOutfit(creature, outfit);}
+	{
+		if (client) {
+			client->sendCreatureOutfit(creature, outfit);
+			for (AutoList<ProtocolGame>::listiterator it = cSpectators.list.begin(); it != cSpectators.list.end(); ++it)
+				if (it->second->getPlayer() == this)
+					it->second->sendCreatureOutfit(creature, outfit);
+		}
+	}
 	void sendCreatureChangeVisible(const Creature* creature, bool visible)
 		{
 			if(client){
@@ -522,7 +733,7 @@ public:
 					}
 					else{
 						if(visible){
-							client->sendAddCreature(creature, creature->getPosition(), creature->getTile()->getClientIndexOfThing(this, creature));
+							client->sendAddCreature(creature, creature->getPosition(), creature->getTile()->getClientIndexOfThing(this, creature), true);
 						}
 						else{
 							client->sendRemoveCreature(creature, creature->getPosition(), creature->getTile()->getClientIndexOfThing(this, creature), false);
@@ -535,14 +746,29 @@ public:
 	void forceClientToReloadCreature(const Creature* creature) {
 		if (client && creature) {
 			client->sendRemoveCreature(creature, creature->getPosition(), creature->getTile()->getClientIndexOfThing(this, creature), false);
-			client->sendAddCreature(creature, creature->getPosition(), creature->getTile()->getClientIndexOfThing(this, creature));
+			client->sendAddCreature(creature, creature->getPosition(), creature->getTile()->getClientIndexOfThing(this, creature), false);
 			}
 		}
 	#endif
+	
 	void sendCreatureLight(const Creature* creature)
-		{if(client) client->sendCreatureLight(creature);}
+	{
+		if (client) {
+			client->sendCreatureLight(creature);
+			for (AutoList<ProtocolGame>::listiterator it = cSpectators.list.begin(); it != cSpectators.list.end(); ++it)
+				if (it->second->getPlayer() == this)
+					it->second->sendCreatureLight(creature);
+		}
+	}
 	void sendCreatureShield(const Creature* creature)
-		{if(client) client->sendCreatureShield(creature);}
+	{
+		if (client) {
+			client->sendCreatureShield(creature);
+			for (AutoList<ProtocolGame>::listiterator it = cSpectators.list.begin(); it != cSpectators.list.end(); ++it)
+				if (it->second->getPlayer() == this)
+					it->second->sendCreatureShield(creature);
+		}
+	}
 
 	//container
 	void sendAddContainerItem(const Container* container, const Item* item);
@@ -553,11 +779,32 @@ public:
 
 	//inventory
 	void sendAddInventoryItem(slots_t slot, const Item* item)
-		{if(client) client->sendAddInventoryItem(slot, item);}
-	void sendUpdateInventoryItem(slots_t slot, const Item* oldItem, const Item* newItem)
-		{if(client) client->sendUpdateInventoryItem(slot, newItem);}
-	void sendRemoveInventoryItem(slots_t slot, const Item* item)
-		{if(client) client->sendRemoveInventoryItem(slot);}
+	{
+		if (client) {
+			client->sendAddInventoryItem(slot, item);
+			for (AutoList<ProtocolGame>::listiterator it = cSpectators.list.begin(); it != cSpectators.list.end(); ++it)
+				if (it->second->getPlayer() == this)
+					it->second->sendAddInventoryItem(slot, item);
+		}
+	}
+	void sendUpdateInventoryItem(slots_t slot, const Item*, const Item* newItem)
+	{
+		if (client) {
+			client->sendUpdateInventoryItem(slot, newItem);
+			for (AutoList<ProtocolGame>::listiterator it = cSpectators.list.begin(); it != cSpectators.list.end(); ++it)
+				if (it->second->getPlayer() == this)
+					it->second->sendUpdateInventoryItem(slot, newItem);
+		}
+	}
+	void sendRemoveInventoryItem(slots_t slot, const Item*)
+	{
+		if (client) {
+			client->sendRemoveInventoryItem(slot);
+			for (AutoList<ProtocolGame>::listiterator it = cSpectators.list.begin(); it != cSpectators.list.end(); ++it)
+				if (it->second->getPlayer() == this)
+					it->second->sendRemoveInventoryItem(slot);
+		}
+	}
 
 	//event methods
 	virtual void onAddTileItem(const Tile* tile, const Position& pos, const Item* item);
@@ -597,40 +844,131 @@ public:
 
 	//other send messages
 	void sendAnimatedText(const Position& pos, unsigned char color, std::string text) const
-		{if(client) client->sendAnimatedText(pos,color,text);}
+	{
+		if (client) {
+			client->sendAnimatedText(pos, color, text);
+			for (AutoList<ProtocolGame>::listiterator it = cSpectators.list.begin(); it != cSpectators.list.end(); ++it)
+				if (it->second->getPlayer() == this)
+					it->second->sendAnimatedText(pos, color, text);
+		}
+	}
 	void sendCancel(const std::string& msg) const
-		{if(client) client->sendCancel(msg);}
+	{
+		if (client) {
+			client->sendCancel(msg);
+			for (AutoList<ProtocolGame>::listiterator it = cSpectators.list.begin(); it != cSpectators.list.end(); ++it)
+				if (it->second->getPlayer() == this)
+					it->second->sendCancel(msg);
+		}
+	}
 	void sendCancelMessage(ReturnValue message) const;
 	void sendCancelTarget() const
-		{if(client) client->sendCancelTarget();}
+	{
+		if (client) {
+			client->sendCancelTarget();
+			for (AutoList<ProtocolGame>::listiterator it = cSpectators.list.begin(); it != cSpectators.list.end(); ++it)
+				if (it->second->getPlayer() == this)
+					it->second->sendCancelTarget();
+		}
+	}
 	void sendCancelWalk() const
-		{if(client) client->sendCancelWalk();}
+	{
+		if (client) {
+			client->sendCancelWalk();
+			for (AutoList<ProtocolGame>::listiterator it = cSpectators.list.begin(); it != cSpectators.list.end(); ++it)
+				if (it->second->getPlayer() == this)
+					it->second->sendCancelWalk();
+		}
+	}
 	void sendChangeSpeed(const Creature* creature, uint32_t newSpeed) const
-		{if(client) client->sendChangeSpeed(creature, newSpeed);}
+	{
+		if (client) {
+			client->sendChangeSpeed(creature, newSpeed);
+			for (AutoList<ProtocolGame>::listiterator it = cSpectators.list.begin(); it != cSpectators.list.end(); ++it)
+				if (it->second->getPlayer() == this)
+					it->second->sendChangeSpeed(creature, newSpeed);
+		}
+	}
 	void sendCreatureHealth(const Creature* creature) const
-		{if(client) client->sendCreatureHealth(creature);}
+	{
+		if (client) {
+			client->sendCreatureHealth(creature);
+			for (AutoList<ProtocolGame>::listiterator it = cSpectators.list.begin(); it != cSpectators.list.end(); ++it)
+				if (it->second->getPlayer() == this)
+					it->second->sendCreatureHealth(creature);
+		}
+	}
 	void sendDistanceShoot(const Position& from, const Position& to, unsigned char type) const
-		{if(client) client->sendDistanceShoot(from, to, type);}
+	{
+		if (client) {
+			client->sendDistanceShoot(from, to, type);
+			for (AutoList<ProtocolGame>::listiterator it = cSpectators.list.begin(); it != cSpectators.list.end(); ++it)
+				if (it->second->getPlayer() == this)
+					it->second->sendDistanceShoot(from, to, type);
+		}
+	}
 	void sendHouseWindow(House* house, uint32_t listId) const;
 	void sendOutfitWindow() const;
 	void sendCreatePrivateChannel(uint16_t channelId, const std::string& channelName)
-		{if(client) client->sendCreatePrivateChannel(channelId, channelName);}
+	{
+		if (client) {
+			client->sendCreatePrivateChannel(channelId, channelName);
+			for (AutoList<ProtocolGame>::listiterator it = cSpectators.list.begin(); it != cSpectators.list.end(); ++it)
+				if (it->second->getPlayer() == this)
+					it->second->sendCreatePrivateChannel(channelId, channelName);
+		}
+	}
 	void sendClosePrivate(uint16_t channelId) const
-		{if(client) client->sendClosePrivate(channelId);}
+	{
+		if (client) {
+			client->sendClosePrivate(channelId);
+			for (AutoList<ProtocolGame>::listiterator it = cSpectators.list.begin(); it != cSpectators.list.end(); ++it)
+				if (it->second->getPlayer() == this)
+					it->second->sendClosePrivate(channelId);
+		}
+	}
 	void sendIcons() const;
 	void sendMagicEffect(const Position& pos, unsigned char type) const
-		{if(client) client->sendMagicEffect(pos,type);}
+	{
+		if (client) {
+			client->sendMagicEffect(pos, type);
+			for (AutoList<ProtocolGame>::listiterator it = cSpectators.list.begin(); it != cSpectators.list.end(); ++it)
+				if (it->second->getPlayer() == this)
+					it->second->sendMagicEffect(pos, type);
+		}
+	}
 	void sendStats();
 	void sendSkills() const
-		{if(client) client->sendSkills();}
+	{
+		if (client) {
+			client->sendSkills();
+			for (AutoList<ProtocolGame>::listiterator it = cSpectators.list.begin(); it != cSpectators.list.end(); ++it)
+				if (it->second->getPlayer() == this)
+					it->second->sendSkills();
+		}
+	}
 	void sendTextMessage(MessageClasses mclass, const std::string& message) const
-		{if(client) client->sendTextMessage(mclass, message);}
+	{
+		if (client) {
+			client->sendTextMessage(mclass, message);
+			for (AutoList<ProtocolGame>::listiterator it = cSpectators.list.begin(); it != cSpectators.list.end(); ++it)
+				if (it->second->getPlayer() == this)
+					it->second->sendTextMessage(mclass, message);
+		}
+	}
 	void sendTextWindow(Item* item, uint16_t maxlen, bool canWrite) const
 		{if(client) client->sendTextWindow(windowTextId, item, maxlen, canWrite);}
 	void sendTextWindow(uint32_t itemId, const std::string& text) const
 		{if(client) client->sendTextWindow(windowTextId, itemId, text);}
-	void sendToChannel(Creature* creature, SpeakClasses type, const std::string& text, uint16_t channelId, uint32_t time = 0) const
-		{if(client) client->sendToChannel(creature, type, text, channelId, time);}
+	void sendToChannel(Creature* creature, SpeakClasses type, const std::string& text, uint16_t channelId, uint32_t time = 0, ProtocolGame* pg = NULL) const
+	{
+		if (client) {
+			client->sendToChannel(creature, type, text, channelId, time,pg);
+			for (AutoList<ProtocolGame>::listiterator it = cSpectators.list.begin(); it != cSpectators.list.end(); ++it) 
+				if (it->second->getPlayer() == this)
+					it->second->sendToChannel(creature, type, text, channelId, time, pg);
+		}
+	}
 	// new: shop window
 	void sendShop()
 		{if(client){client->sendShop(shopItemList);}}
@@ -643,7 +981,14 @@ public:
 	void sendTradeClose() const
 		{if(client) client->sendCloseTrade();}
 	void sendWorldLight(LightInfo& lightInfo)
-		{if(client) client->sendWorldLight(lightInfo);}
+	{
+		if (client) {
+			client->sendWorldLight(lightInfo);
+			for(AutoList<ProtocolGame>::listiterator it = cSpectators.list.begin(); it != cSpectators.list.end(); ++it) 
+				if (it->second->getPlayer() == this)
+					it->second->sendWorldLight(lightInfo);
+		}
+	}
 	void sendChannelsDialog()
 		{if(client) client->sendChannelsDialog();}
 	void sendOpenPrivateChannel(const std::string& receiver)
@@ -651,9 +996,23 @@ public:
 	void sendOutfitWindow()
 		{if(client) client->sendOutfitWindow();}
 	void sendCloseContainer(uint32_t cid)
-		{if(client) client->sendCloseContainer(cid);}
+	{
+		if (client){
+			client->sendCloseContainer(cid);
+			for (AutoList<ProtocolGame>::listiterator it = cSpectators.list.begin(); it != cSpectators.list.end(); ++it) 
+				if (it->second->getPlayer() == this)
+					it->second->sendCloseContainer(cid);
+		}
+	}
 	void sendChannel(uint16_t channelId, const std::string& channelName)
-		{if(client) client->sendChannel(channelId, channelName);}
+	{
+		if (client) {
+			client->sendChannel(channelId, channelName);
+			for (AutoList<ProtocolGame>::listiterator it = cSpectators.list.begin(); it != cSpectators.list.end(); ++it)
+				if (it->second->getPlayer() == this)
+					it->second->sendChannel(channelId, channelName);
+		}
+	}
 	void sendRuleViolationsChannel(uint16_t channelId)
 		{if(client) client->sendRuleViolationsChannel(channelId);}
 	void sendRemoveReport(const std::string& name)
@@ -725,6 +1084,8 @@ public:
 	uint32_t maxDepotLimit;
 
 protected:
+	PlayerCast cast;
+
 	void checkTradeState(const Item* item);
 	bool hasCapacity(const Item* item, uint32_t count) const;
 

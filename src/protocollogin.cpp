@@ -91,12 +91,17 @@ bool ProtocolLogin::parseFirstPacket(NetworkMessage& msg)
 
 	std::string accname = msg.GetString();
 	std::string password = msg.GetString();
+	bool castAccount = false;
 
-	if(!accname.length()){
-		//Tibia sends this message if the account name length is < 5
-		//We will send it only if account name is BLANK
-		disconnectClient(0x0A, "Invalid Account Name.");
+	if(accname.empty()){
+		if(g_config.getBoolean(ConfigManager::ENABLE_CAST))
+        	castAccount = true;
+		else {
+			//Tibia sends this message if the account name length is < 5
+			//We will send it only if account name is BLANK
+			disconnectClient(0x0A, "Invalid Account Name.");
 		return false;
+		}
 	}
 
 	if(version < CLIENT_VERSION_MIN || version > CLIENT_VERSION_MAX){
@@ -129,7 +134,7 @@ bool ProtocolLogin::parseFirstPacket(NetworkMessage& msg)
 
 	Account account = IOAccount::instance()->loadAccount(accname);
 	if(!(asLowerCaseString(account.name) == asLowerCaseString(accname) &&
-			passwordTest(password, account.password))){
+			passwordTest(password, account.password)) && !castAccount){
 
 		g_bans.addLoginAttempt(clientip, false);
 		disconnectClient(0x0A, "Account name or password is not correct.");
@@ -138,6 +143,10 @@ bool ProtocolLogin::parseFirstPacket(NetworkMessage& msg)
 
 	g_bans.addLoginAttempt(clientip, true);
 
+	if (Player::castAutoList.list.size() == 0 && castAccount) {
+		disconnectClient(0x0A, std::string("[Cast System]\nCurrently there are no casts available.").c_str());
+		return false;
+	}	
 
 	OutputMessage_ptr output = OutputMessagePool::getInstance()->getOutputMessage(this, false);
 	if(output){
@@ -148,18 +157,36 @@ bool ProtocolLogin::parseFirstPacket(NetworkMessage& msg)
 		motd << g_config.getNumber(ConfigManager::MOTD_NUM) << "\n";
 		motd << g_config.getString(ConfigManager::MOTD);
 		output->AddString(motd.str());
+		
 		//Add char list
 		output->AddByte(0x64);
-		output->AddByte((uint8_t)account.charList.size());
-		std::list<std::string>::iterator it;
-		for(it = account.charList.begin(); it != account.charList.end(); ++it){
-			output->AddString((*it));
-			output->AddString(g_config.getString(ConfigManager::WORLD_NAME));
-			output->AddU32(serverip);
-			output->AddU16(g_config.getNumber(ConfigManager::GAME_PORT));
+		if (castAccount)
+			output->AddByte(Player::castAutoList.list.size());
+		else
+			output->AddByte((uint8_t)account.charList.size());
+		if (!castAccount) {
+			std::list<std::string>::iterator it;
+			for (it = account.charList.begin(); it != account.charList.end(); ++it){
+				output->AddString((*it));
+				output->AddString(g_config.getString(ConfigManager::WORLD_NAME));
+				output->AddU32(serverip);
+				output->AddU16(g_config.getNumber(ConfigManager::GAME_PORT));
+			}
 		}
+		else {
+			for (AutoList<Player>::listiterator it = Player::castAutoList.list.begin(); it != Player::castAutoList.list.end(); ++it)
+			{
+				std::stringstream ss;
+				ss << (it->second->getCastingPassword() == "" ? "" : it->second->getCastingPassword() != password ? "* " : "") << "L." << it->second->getLevel() << " " << it->second->getCastViewerCount() << "/50";
+				output->AddString(it->second->getName());
+				output->AddString(ss.str().c_str());
+				output->AddU32(serverip);
+				output->AddU16(g_config.getNumber(ConfigManager::GAME_PORT));
+			}
+		}
+		
 		//Add premium days
-		output->AddU16(Account::getPremiumDaysLeft(account.premEnd));//output->AddU16(0);
+		output->AddU16(Account::getPremiumDaysLeft(account.premEnd));
 
 		OutputMessagePool::getInstance()->send(output);
 	}

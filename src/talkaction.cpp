@@ -31,6 +31,7 @@
 #include "player.h"
 #include "tools.h"
 #include "game.h"
+#include "chat.h"
 #include "house.h"
 #include "ioplayer.h"
 #include "configmanager.h"
@@ -45,6 +46,7 @@
 
 extern Game g_game;
 extern ConfigManager g_config;
+extern Chat g_chat;
 
 TalkActions::TalkActions() :
 m_scriptInterface("TalkAction Interface")

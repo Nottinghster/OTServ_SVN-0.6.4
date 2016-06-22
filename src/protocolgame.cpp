@@ -525,280 +525,318 @@ void ProtocolGame::parsePacket(NetworkMessage &msg)
 
 	bool disconnectPlayer = false;
 
-	switch(recvbyte){
-	case 0x14: // logout
-		parseLogout(msg);
-		break;
-
-	case 0x1E: // keep alive / ping response
-		parseReceivePing(msg);
-		break;
-
-	case 0x64: // move with steps
-		parseAutoWalk(msg);
-		break;
-
-	case 0x65: // move north
-		parseMove(msg, NORTH);
-		break;
-
-	case 0x66: // move east
-		parseMove(msg, EAST);
-		break;
-
-	case 0x67: // move south
-		parseMove(msg, SOUTH);
-		break;
-
-	case 0x68: // move west
-		parseMove(msg, WEST);
-		break;
-
-	case 0x69: // stop-autowalk
-		parseStopAutoWalk(msg);
-		break;
-
-	case 0x6A:
-		parseMove(msg, NORTHEAST);
-		break;
-
-	case 0x6B:
-		parseMove(msg, SOUTHEAST);
-		break;
-
-	case 0x6C:
-		parseMove(msg, SOUTHWEST);
-		break;
-
-	case 0x6D:
-		parseMove(msg, NORTHWEST);
-		break;
-
-	case 0x6F: // turn north
-		parseTurn(msg, NORTH);
-		break;
-
-	case 0x70: // turn east
-		parseTurn(msg, EAST);
-		break;
-
-	case 0x71: // turn south
-		parseTurn(msg, SOUTH);
-		break;
-
-	case 0x72: // turn west
-		parseTurn(msg, WEST);
-		break;
-
-	case 0x78: // throw item
-		parseThrow(msg);
-		break;
-
-	case 0x79: // description in shop window
-		parseLookInShop(msg);
-		break;
-
-	case 0x7A: // player bought from shop
-		parsePlayerPurchase(msg);
-		break;
-
-	case 0x7B: // player sold to shop
-		parsePlayerSale(msg);
-		break;
-
-	case 0x7C: // player closed shop window
-		parseCloseShop(msg);
-		break;
-
-	case 0x7D: // Request trade
-		parseRequestTrade(msg);
-		break;
-
-	case 0x7E: // Look at an item in trade
-		parseLookInTrade(msg);
-		break;
-
-	case 0x7F: // Accept trade
-		parseAcceptTrade(msg);
-		break;
-
-	case 0x80: // Close/cancel trade
-		parseCloseTrade();
-		break;
-
-	case 0x82: // use item
-		parseUseItem(msg);
-		break;
-
-	case 0x83: // use item
-		parseUseItemEx(msg);
-		break;
-
-	case 0x84: // battle window
-		parseBattleWindow(msg);
-		break;
-
-	case 0x85:	//rotate item
-		parseRotateItem(msg);
-		break;
-
-	case 0x87: // close container
-		parseCloseContainer(msg);
-		break;
-
-	case 0x88: //"up-arrow" - container
-		parseUpArrowContainer(msg);
-		break;
-
-	case 0x89:
-		parseTextWindow(msg);
-		break;
-
-	case 0x8A:
-		parseHouseWindow(msg);
-		break;
-
-	case 0x8C: // throw item
-		parseLookAt(msg);
-		break;
-
-	case 0x96:  // say something
-		parseSay(msg);
-		break;
-
-	case 0x97: // request Channels
-		parseGetChannels(msg);
-		break;
-
-	case 0x98: // open Channel
-		parseOpenChannel(msg);
-		break;
-
-	case 0x99: // close Channel
-		parseCloseChannel(msg);
-		break;
-
-	case 0x9A: // open priv
-		parseOpenPriv(msg);
-		break;
-
-	case 0x9B: //process report
-		parseProcessRuleViolation(msg);
-		break;
-
-	case 0x9C: //gm closes report
-		parseCloseRuleViolation(msg);
-		break;
-
-	case 0x9D: //player cancels report
-		parseCancelRuleViolation(msg);
-		break;
-
-	case 0x9E: // close NPC
-		parseCloseNpc(msg);
-		break;
-
-	case 0xA0: // set attack and follow mode
-		parseFightModes(msg);
-		break;
-
-	case 0xA1: // attack
-		parseAttack(msg);
-		break;
-
-	case 0xA2: //follow
-		parseFollow(msg);
-		break;
-
-	case 0xA3:
-		parseInviteToParty(msg);
-		break;
-
-	case 0xA4:
-		parseJoinParty(msg);
-		break;
-
-	case 0xA5:
-		parseRevokePartyInvitation(msg);
-		break;
-
-	case 0xA6:
-		parsePassPartyLeadership(msg);
-		break;
-
-	case 0xA7:
-		parseLeaveParty(msg);
-		break;
-
-	case 0xA8:
-		parseEnableSharedPartyExperience(msg);
-		break;
-
-	case 0xAA:
-		parseCreatePrivateChannel(msg);
-		break;
-
-	case 0xAB:
-		parseChannelInvite(msg);
-		break;
-
-	case 0xAC:
-		parseChannelExclude(msg);
-		break;
-
-	case 0xBE: // cancel move
-		parseCancelMove(msg);
-		break;
-
-	case 0xC9: //client request to resend the tile
-		parseUpdateTile(msg);
-		break;
-
-	case 0xCA: //client request to resend the container (happens when you store more than container maxsize)
-		parseUpdateContainer(msg);
-		break;
-
-	case 0xD2: // request outfit
-		parseRequestOutfit(msg);
-		break;
-
-	case 0xD3: // set outfit
-		parseSetOutfit(msg);
-		break;
-
-	case 0xDC:
-		parseAddVip(msg);
-		break;
-
-	case 0xDD:
-		parseRemoveVip(msg);
-		break;
-
-	case 0xE6:
-		parseBugReport(msg);
-		break;
-
-	case 0xE7:
-		parseViolationWindow(msg);
-		break;
-
-	case 0xE8:
-		parseDebugAssert(msg);
-		break;
-
-	case 0xF0:
-		parseQuestLog(msg);
-		break;
-
-	case 0xF1:
-		parseQuestLine(msg);
-		break;
-
-	default:
-		std::cout << "Unknown packet header: " << std::hex << (int)recvbyte << std::dec << ", player " << player->getName() << std::endl;
-		disconnectPlayer = true;
-		break;
-	}
+	if (isCast) {
+		switch (recvbyte) {
+		case 0x14: // logout
+			g_dispatcher.addTask(createTask(boost::bind(&ProtocolGame::logout, this, false)));
+			break;
+
+		case 0x96:  // say something
+			parseSay(msg);
+			break;
+
+		case 0x1E: // keep alive / ping response
+			g_dispatcher.addTask(createTask(boost::bind(&Game::playerReceivePing, &g_game, player->getID())));
+			break;
+
+		case 0x97: // request Channels
+			addGameTask(&Game::playerRequestChannels, player->getID(), this);
+			break;
+
+		case 0xAA:
+			addGameTask(&Game::playerCreatePrivateChannel, player->getID(), this);
+			break;
+
+		case 0x6F: // turn north
+			addGameTaskTimed(DISPATCHER_TASK_EXPIRATION, &Game::playerTurn, player->getID(), NORTH);
+			break;
+
+
+		case 0x71: // turn south
+			addGameTaskTimed(DISPATCHER_TASK_EXPIRATION, &Game::playerTurn, player->getID(), SOUTH);
+			break;
+
+		default:
+			sendCancelWalk();
+			break;
+		}
+	}	
+	else {
+		switch(recvbyte){
+		case 0x14: // logout
+			parseLogout(msg);
+			break;
+	
+		case 0x1E: // keep alive / ping response
+			parseReceivePing(msg);
+			break;
+	
+		case 0x64: // move with steps
+			parseAutoWalk(msg);
+			break;
+	
+		case 0x65: // move north
+			parseMove(msg, NORTH);
+			break;
+	
+		case 0x66: // move east
+			parseMove(msg, EAST);
+			break;
+	
+		case 0x67: // move south
+			parseMove(msg, SOUTH);
+			break;
+	
+		case 0x68: // move west
+			parseMove(msg, WEST);
+			break;
+	
+		case 0x69: // stop-autowalk
+			parseStopAutoWalk(msg);
+			break;
+	
+		case 0x6A:
+			parseMove(msg, NORTHEAST);
+			break;
+	
+		case 0x6B:
+			parseMove(msg, SOUTHEAST);
+			break;
+	
+		case 0x6C:
+			parseMove(msg, SOUTHWEST);
+			break;
+	
+		case 0x6D:
+			parseMove(msg, NORTHWEST);
+			break;
+	
+		case 0x6F: // turn north
+			parseTurn(msg, NORTH);
+			break;
+	
+		case 0x70: // turn east
+			parseTurn(msg, EAST);
+			break;
+	
+		case 0x71: // turn south
+			parseTurn(msg, SOUTH);
+			break;
+	
+		case 0x72: // turn west
+			parseTurn(msg, WEST);
+			break;
+	
+		case 0x78: // throw item
+			parseThrow(msg);
+			break;
+	
+		case 0x79: // description in shop window
+			parseLookInShop(msg);
+			break;
+	
+		case 0x7A: // player bought from shop
+			parsePlayerPurchase(msg);
+			break;
+	
+		case 0x7B: // player sold to shop
+			parsePlayerSale(msg);
+			break;
+	
+		case 0x7C: // player closed shop window
+			parseCloseShop(msg);
+			break;
+	
+		case 0x7D: // Request trade
+			parseRequestTrade(msg);
+			break;
+	
+		case 0x7E: // Look at an item in trade
+			parseLookInTrade(msg);
+			break;
+	
+		case 0x7F: // Accept trade
+			parseAcceptTrade(msg);
+			break;
+	
+		case 0x80: // Close/cancel trade
+			parseCloseTrade();
+			break;
+	
+		case 0x82: // use item
+			parseUseItem(msg);
+			break;
+	
+		case 0x83: // use item
+			parseUseItemEx(msg);
+			break;
+	
+		case 0x84: // battle window
+			parseBattleWindow(msg);
+			break;
+	
+		case 0x85:	//rotate item
+			parseRotateItem(msg);
+			break;
+	
+		case 0x87: // close container
+			parseCloseContainer(msg);
+			break;
+	
+		case 0x88: //"up-arrow" - container
+			parseUpArrowContainer(msg);
+			break;
+	
+		case 0x89:
+			parseTextWindow(msg);
+			break;
+	
+		case 0x8A:
+			parseHouseWindow(msg);
+			break;
+	
+		case 0x8C: // throw item
+			parseLookAt(msg);
+			break;
+	
+		case 0x96:  // say something
+			parseSay(msg);
+			break;
+	
+		case 0x97: // request Channels
+			parseGetChannels(msg);
+			break;
+	
+		case 0x98: // open Channel
+			parseOpenChannel(msg);
+			break;
+	
+		case 0x99: // close Channel
+			parseCloseChannel(msg);
+			break;
+	
+		case 0x9A: // open priv
+			parseOpenPriv(msg);
+			break;
+	
+		case 0x9B: //process report
+			parseProcessRuleViolation(msg);
+			break;
+	
+		case 0x9C: //gm closes report
+			parseCloseRuleViolation(msg);
+			break;
+	
+		case 0x9D: //player cancels report
+			parseCancelRuleViolation(msg);
+			break;
+	
+		case 0x9E: // close NPC
+			parseCloseNpc(msg);
+			break;
+	
+		case 0xA0: // set attack and follow mode
+			parseFightModes(msg);
+			break;
+	
+		case 0xA1: // attack
+			parseAttack(msg);
+			break;
+	
+		case 0xA2: //follow
+			parseFollow(msg);
+			break;
+	
+		case 0xA3:
+			parseInviteToParty(msg);
+			break;
+	
+		case 0xA4:
+			parseJoinParty(msg);
+			break;
+	
+		case 0xA5:
+			parseRevokePartyInvitation(msg);
+			break;
+	
+		case 0xA6:
+			parsePassPartyLeadership(msg);
+			break;
+	
+		case 0xA7:
+			parseLeaveParty(msg);
+			break;
+	
+		case 0xA8:
+			parseEnableSharedPartyExperience(msg);
+			break;
+	
+		case 0xAA:
+			parseCreatePrivateChannel(msg);
+			break;
+	
+		case 0xAB:
+			parseChannelInvite(msg);
+			break;
+	
+		case 0xAC:
+			parseChannelExclude(msg);
+			break;
+	
+		case 0xBE: // cancel move
+			parseCancelMove(msg);
+			break;
+	
+		case 0xC9: //client request to resend the tile
+			parseUpdateTile(msg);
+			break;
+	
+		case 0xCA: //client request to resend the container (happens when you store more than container maxsize)
+			parseUpdateContainer(msg);
+			break;
+	
+		case 0xD2: // request outfit
+			parseRequestOutfit(msg);
+			break;
+	
+		case 0xD3: // set outfit
+			parseSetOutfit(msg);
+			break;
+	
+		case 0xDC:
+			parseAddVip(msg);
+			break;
+	
+		case 0xDD:
+			parseRemoveVip(msg);
+			break;
+	
+		case 0xE6:
+			parseBugReport(msg);
+			break;
+	
+		case 0xE7:
+			parseViolationWindow(msg);
+			break;
+	
+		case 0xE8:
+			parseDebugAssert(msg);
+			break;
+	
+		case 0xF0:
+			parseQuestLog(msg);
+			break;
+	
+		case 0xF1:
+			parseQuestLine(msg);
+			break;
+	
+		default:
+			std::cout << "Unknown packet header: " << std::hex << (int)recvbyte << std::dec << ", player " << player->getName() << std::endl;
+			disconnectPlayer = true;
+			break;
+		}
+	}	
 
 	if(msg.isOverrun()){ //we've got a badass over here
 		std::cout << "msg.isOvverrun() == true, player " << player->getName() << std::endl;
@@ -1725,21 +1763,27 @@ void ProtocolGame::sendCreatePrivateChannel(uint16_t channelId, const std::strin
 void ProtocolGame::sendChannelsDialog()
 {
 	NetworkMessage_ptr msg = getOutputBuffer();
-	if(msg){
+	if (msg){
 		TRACK_MESSAGE(msg);
-		ChannelList list;
-		list = g_chat.getChannelList(player);
-
 		msg->AddByte(0xAB);
-		msg->AddByte(list.size());
+		if (getIsCast()) {
+			msg->AddByte(1);
+			msg->AddU16(CHANNEL_PRIVATE);
+			msg->AddString("Cast Channel");
+		}
+		else {
+			ChannelList list;
+			list = g_chat.getChannelList(player);
+			msg->AddByte(list.size());
 
-		while(list.size()){
-			ChatChannel *channel;
-			channel = list.front();
-			list.pop_front();
+			while (list.size()) {
+				ChatChannel *channel;
+				channel = list.front();
+				list.pop_front();
 
-			msg->AddU16(channel->getId());
-			msg->AddString(channel->getName());
+				msg->AddU16(channel->getId());
+				msg->AddString(channel->getName());
+			}
 		}
 	}
 }
@@ -2245,7 +2289,7 @@ void ProtocolGame::sendUpdateTile(const Tile* tile, const Position& pos)
 	}
 }
 
-void ProtocolGame::sendAddCreature(const Creature* creature, const Position& pos, uint32_t stackpos)
+void ProtocolGame::sendAddCreature(const Creature* creature, const Position& pos, uint32_t stackpos, bool isLoggingIn)
 {
 	if(canSee(creature)){
 		NetworkMessage_ptr msg = getOutputBuffer();
@@ -2273,6 +2317,10 @@ void ProtocolGame::sendAddCreature(const Creature* creature, const Position& pos
 				#endif
 
 				AddMapDescription(msg, pos);
+				
+				if (isLoggingIn){
+					AddMagicEffect(msg, player->getPosition(), NM_ME_TELEPORT);
+				}				
 
 				AddInventoryItem(msg, SLOT_HEAD, player->getInventoryItem(SLOT_HEAD));
 				AddInventoryItem(msg, SLOT_NECKLACE, player->getInventoryItem(SLOT_NECKLACE));
@@ -2308,6 +2356,10 @@ void ProtocolGame::sendAddCreature(const Creature* creature, const Position& pos
 			}
 			else{
 				AddTileCreature(msg, pos, stackpos, creature);
+				
+				if (isLoggingIn){
+					AddMagicEffect(msg, creature->getPosition(), NM_ME_TELEPORT);
+				}
 			}
 		}
 	}

@@ -49,6 +49,11 @@ extern Weapons* g_weapons;
 extern CreatureEvents* g_creatureEvents;
 extern Guilds g_guilds;
 
+AutoList<Player> Player::castAutoList;
+AutoList<Player> Player::listPlayer;
+AutoList<ProtocolGame> Player::cSpectators;
+uint32_t Player::nextSpectator = 0;
+
 AutoList<Player> Player::listPlayer;
 MuteCountMap Player::muteCountMap;
 ChannelStatementMap Player::channelStatementMap;
@@ -244,6 +249,31 @@ bool Player::setVocation(uint32_t vocId)
 uint32_t Player::getVocationId() const
 {
 	return vocation_id;
+}
+
+void Player::setCasting(bool c)
+{
+	if (cast.isCasting == c)
+		return;
+
+	if (cast.isCasting && !c) {
+		for (AutoList<ProtocolGame>::listiterator it = cSpectators.list.begin(); it != cSpectators.list.end(); ++it) {
+			if (it->second->getPlayer() == this) {
+				removeCastViewer(it->first);
+				it->second->disconnect();
+			}
+		}
+		castAutoList.removeList(id);
+	}
+	else {
+		castAutoList.addList(this);
+
+		ChatChannel* channel = g_chat.createChannel(this, CHANNEL_PRIVATE);
+		if (channel && channel->addUser(this))
+			sendCreatePrivateChannel(channel->getId(), "Cast Channel");
+	}
+
+	cast.isCasting = c;
 }
 
 bool Player::isPushable() const
@@ -652,6 +682,9 @@ void Player::sendIcons() const
 {
 	if(client){
 		client->sendIcons(getIcons());
+		for (AutoList<ProtocolGame>::listiterator it = Player::cSpectators.list.begin(); it != Player::cSpectators.list.end(); ++it)
+			if (it->second->getPlayer() == this)
+				it->second->sendIcons(getIcons());		
 	}
 }
 
@@ -1614,6 +1647,9 @@ void Player::sendAddContainerItem(const Container* container, const Item* item)
 		for(ContainerVector::const_iterator cl = containerVec.begin(); cl != containerVec.end(); ++cl){
 			if(cl->second == container){
 				client->sendAddContainerItem(cl->first, item);
+				for (AutoList<ProtocolGame>::listiterator it = Player::cSpectators.list.begin(); it != Player::cSpectators.list.end(); ++it)
+					if (it->second->getPlayer() == this)
+						it->second->sendAddContainerItem(cl->first, item);				
 			}
 		}
 	}
@@ -1625,6 +1661,9 @@ void Player::sendUpdateContainerItem(const Container* container, uint8_t slot, c
 		for(ContainerVector::const_iterator cl = containerVec.begin(); cl != containerVec.end(); ++cl){
 			if(cl->second == container){
 				client->sendUpdateContainerItem(cl->first, slot, newItem);
+				for (AutoList<ProtocolGame>::listiterator it = Player::cSpectators.list.begin(); it != Player::cSpectators.list.end(); ++it)
+					if (it->second->getPlayer() == this)
+						it->second->sendUpdateContainerItem(cl->first, slot, newItem);
 			}
 		}
 	}
@@ -1995,6 +2034,9 @@ void Player::onCloseContainer(const Container* container)
 		for(ContainerVector::const_iterator cl = containerVec.begin(); cl != containerVec.end(); ++cl){
 			if(cl->second == container){
 				client->sendCloseContainer(cl->first);
+				for (AutoList<ProtocolGame>::listiterator it = Player::cSpectators.list.begin(); it != Player::cSpectators.list.end(); ++it)
+					if (it->second->getPlayer() == this)
+						it->second->sendCloseContainer(cl->first);				
 			}
 		}
 	}
@@ -2008,6 +2050,9 @@ void Player::onSendContainer(const Container* container)
 		for(ContainerVector::const_iterator cl = containerVec.begin(); cl != containerVec.end(); ++cl){
 			if(cl->second == container){
 				client->sendContainer(cl->first, container, hasParent);
+				for (AutoList<ProtocolGame>::listiterator it = Player::cSpectators.list.begin(); it != Player::cSpectators.list.end(); ++it)
+					if (it->second->getPlayer() == this)
+						it->second->sendContainer(cl->first, container, hasParent);				
 			}
 		}
 	}
@@ -2123,7 +2168,12 @@ void Player::onThink(uint32_t interval)
 
 		if(client){
 			client->sendPing();
+			for (AutoList<ProtocolGame>::listiterator it = Player::cSpectators.list.begin(); it != Player::cSpectators.list.end(); ++it)
+				if (it->second->getPlayer() == this)
+					it->second->sendPing();			
 		}
+		else if (g_config.getBoolean(ConfigManager::ENABLE_CAST))
+			setCasting(false);
 	}
 
 	if(OTSYS_TIME() - last_pong >= 60000){
@@ -2505,6 +2555,8 @@ uint32_t Player::getIP() const
 
 void Player::onDie()
 {
+	kickCastViewers();
+	
 	if(getZone() != ZONE_PVP){
 		bool isLootPrevented = false;
 		bool isSkillPrevented = false;
@@ -2785,6 +2837,7 @@ void Player::addDefaultRegeneration(uint32_t addTicks)
 void Player::removeList()
 {
 	listPlayer.removeList(getID());
+	castAutoList.removeList(getID());
 
 	for(AutoList<Player>::listiterator it = Player::listPlayer.list.begin(); it != Player::listPlayer.list.end(); ++it)
 	{
@@ -2960,6 +3013,9 @@ void Player::autoCloseContainers(const Container* container)
 		closeContainer(*it);
 		if(client){
 			client->sendCloseContainer(*it);
+			for (AutoList<ProtocolGame>::listiterator it2 = Player::cSpectators.list.begin(); it2 != Player::cSpectators.list.end(); ++it2)
+				if (it2->second->getPlayer() == this)
+					it2->second->sendCloseContainer(*it);			
 		}
 	}
 }
