@@ -352,6 +352,19 @@ protected:
 	static bool getArea(lua_State *L, std::list<uint32_t>& list, uint32_t& rows);
 
 	//lua functions
+	
+	static int luaDoPlayerSetCastPassword(lua_State* L);
+	static int luaDoPlayerSetCastDescription(lua_State* L);
+	static int luaDoPlayerSetCastState(lua_State* L);
+	static int luaGetPlayerCast(lua_State* L);
+	static int luaDoPlayerAddCastBan(lua_State* L);
+	static int luaDoPlayerRemoveCastBan(lua_State* L);
+	static int luaGetPlayerCastBans(lua_State* L);
+	static int luaGetPlayerCastViewers(lua_State* L);
+	static int luaDoPlayerAddCastMute(lua_State* L);
+	static int luaDoPlayerRemoveCastMute(lua_State* L);
+	static int luaGetPlayerCastMutes(lua_State* L);	
+	
 	static int luaGetOTSYSTime(lua_State *L);
 	static int luaGetConfigValue(lua_State *L);
 	static int luaDoRemoveItem(lua_State *L);

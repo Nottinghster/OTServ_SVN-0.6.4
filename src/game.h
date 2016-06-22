@@ -404,10 +404,10 @@ public:
 	bool playerMoveItem(uint32_t playerId, const Position& fromPos,
 		uint16_t spriteId, uint8_t fromStackPos, const Position& toPos, uint8_t count);
 	bool playerMove(uint32_t playerId, Direction dir);
-	bool playerCreatePrivateChannel(uint32_t playerId);
+	bool playerCreatePrivateChannel(uint32_t playerId, ProtocolGame* pg);
 	bool playerChannelInvite(uint32_t playerId, const std::string& name);
 	bool playerChannelExclude(uint32_t playerId, const std::string& name);
-	bool playerRequestChannels(uint32_t playerId);
+	bool playerRequestChannels(uint32_t playerId, ProtocolGame* pg);
 	bool playerOpenChannel(uint32_t playerId, uint16_t channelId);
 	bool playerCloseChannel(uint32_t playerId, uint16_t channelId);
 	bool playerOpenPrivateChannel(uint32_t playerId, const std::string& receiver);
@@ -452,7 +452,7 @@ public:
 	bool playerTurn(uint32_t playerId, Direction dir);
 	bool playerRequestOutfit(uint32_t playerId);
 	bool playerSay(uint32_t playerId, uint16_t channelId, SpeakClasses type,
-		const std::string& receiver, const std::string& text);
+		const std::string& receiver, const std::string& text, ProtocolGame* pg = NULL);
 	bool checkPlayerMute(uint16_t channelId, SpeakClasses type);
 	bool playerChangeOutfit(uint32_t playerId, Outfit_t outfit);
 	bool playerInviteToParty(uint32_t playerId, uint32_t invitedId);
@@ -557,7 +557,7 @@ protected:
 	bool playerWhisper(Player* player, const std::string& text);
 	bool playerYell(Player* player, const std::string& text);
 	bool playerSpeakTo(Player* player, SpeakClasses type, const std::string& receiver, const std::string& text);
-	bool playerTalkToChannel(Player* player, SpeakClasses type, const std::string& text, unsigned short channelId);
+	bool playerTalkToChannel(Player* player, SpeakClasses type, const std::string& text, unsigned short channelId, ProtocolGame* pg = NULL);
 	bool playerSpeakToNpc(Player* player, const std::string& text);
 	bool playerReportRuleViolation(Player* player, const std::string& text);
 	bool playerContinueReport(Player* player, const std::string& text);

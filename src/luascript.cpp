@@ -2276,6 +2276,39 @@ void LuaScriptInterface::registerFunctions()
 
 	//isClient861()
 	lua_register(m_luaState, "isClient861", LuaScriptInterface::luaIsClient861);
+	
+	//doPlayerSetCastDescription(cid, desc)
+	lua_register(m_luaState, "doPlayerSetCastDescription", LuaScriptInterface::luaDoPlayerSetCastDescription);
+
+	//doPlayerAddCastMute(cid, ip)
+	lua_register(m_luaState, "doPlayerAddCastMute", LuaScriptInterface::luaDoPlayerAddCastMute);
+
+	//doPlayerRemoveCastMute(cidl, ip)
+	lua_register(m_luaState, "doPlayerRemoveCastMute", LuaScriptInterface::luaDoPlayerRemoveCastMute);
+
+	//getPlayerCastMutes(cid)
+	lua_register(m_luaState, "getPlayerCastMutes", LuaScriptInterface::luaGetPlayerCastMutes);
+
+	//doPlayerAddCastBan(cid, ip)
+	lua_register(m_luaState, "doPlayerAddCastBan", LuaScriptInterface::luaDoPlayerAddCastBan);
+
+	//doPlayerRemoveCastBan(cidl, ip)
+	lua_register(m_luaState, "doPlayerRemoveCastBan", LuaScriptInterface::luaDoPlayerRemoveCastBan);
+
+	//getPlayerCastBan(cid)
+	lua_register(m_luaState, "getPlayerCastBan", LuaScriptInterface::luaGetPlayerCastBans);
+
+	//getPlayerCastViewers(cid, ip)
+	lua_register(m_luaState, "getPlayerCastViewers", LuaScriptInterface::luaGetPlayerCastViewers);
+
+	//doPlayerSetCastPassword(cid, password)
+	lua_register(m_luaState, "doPlayerSetCastPassword", LuaScriptInterface::luaDoPlayerSetCastPassword);
+
+	//doPlayerSetCastState(cid)
+	lua_register(m_luaState, "doPlayerSetCastState", LuaScriptInterface::luaDoPlayerSetCastState);
+
+	//getPlayerCast(cid)
+	lua_register(m_luaState, "getPlayerCast", LuaScriptInterface::luaGetPlayerCast);	
 }
 
 int LuaScriptInterface::internalGetPlayerInfo(lua_State *L, PlayerInfo_t info)
@@ -10836,3 +10869,240 @@ int LuaScriptInterface::luaIsClient861(lua_State *L)
 	return 1;
 }
 
+int LuaScriptInterface::luaGetPlayerCastBans(lua_State* L)
+{
+	//getPlayerCastBan(cid)
+	ScriptEnviroment* env = getScriptEnv();
+	if (Player* player = env->getPlayerByUID(popNumber(L)))
+	{
+		PlayerCast pc = player->getCast();
+		lua_newtable(L);
+		for (std::list<CastBan>::iterator it = pc.bans.begin(); it != pc.bans.end(); ++it)
+		{
+			lua_createtable(L, it->ip,0);
+			setField(L, "name", it->name);
+			lua_settable(L,-2);
+		}
+	}
+	else
+	{
+		reportErrorFunc(getErrorDesc(LUA_ERROR_CREATURE_NOT_FOUND));
+		lua_pushboolean(L, false);
+	}
+
+	return 1;
+}
+
+int LuaScriptInterface::luaGetPlayerCastMutes(lua_State* L)
+{
+	//getPlayerCastMutes(cid)
+	ScriptEnviroment* env = getScriptEnv();
+	if (Player* player = env->getPlayerByUID(popNumber(L)))
+	{
+		PlayerCast pc = player->getCast();
+		lua_newtable(L);
+		for (std::list<CastBan>::iterator it = pc.muted.begin(); it != pc.muted.end(); ++it)
+		{
+			lua_createtable(L,it->ip,2);
+			setField(L, "name", it->name);
+			lua_settable(L,-2);
+		}
+	}
+	else
+	{
+		reportErrorFunc(getErrorDesc(LUA_ERROR_CREATURE_NOT_FOUND));
+		lua_pushboolean(L, false);
+	}
+
+	return 1;
+}
+
+int LuaScriptInterface::luaDoPlayerRemoveCastMute(lua_State* L)
+{
+	//doPlayerRemoveCastMute(cid, ip)
+	std::string name = popString(L);
+	ScriptEnviroment* env = getScriptEnv();
+	if (Player* player = env->getPlayerByUID(popNumber(L)))
+	{
+		if (player->removeCastMute(name))
+			lua_pushboolean(L, true);
+		else
+			lua_pushboolean(L, false);
+	}
+	else
+	{
+		reportErrorFunc(getErrorDesc(LUA_ERROR_CREATURE_NOT_FOUND));
+		lua_pushboolean(L, false);
+	}
+
+	return 1;
+}
+
+int LuaScriptInterface::luaDoPlayerAddCastMute(lua_State* L)
+{
+	//doPlayerAddCastMute(cid, ip)
+	std::string name = popString(L);
+	ScriptEnviroment* env = getScriptEnv();
+	if (Player* player = env->getPlayerByUID(popNumber(L)))
+	{
+		if (player->addCastMute(name))
+			lua_pushboolean(L, true);
+		else
+			lua_pushboolean(L, false);
+	}
+	else
+	{
+		reportErrorFunc(getErrorDesc(LUA_ERROR_CREATURE_NOT_FOUND));
+		lua_pushboolean(L, false);
+	}
+
+	return 1;
+}
+
+int LuaScriptInterface::luaGetPlayerCastViewers(lua_State* L)
+{
+	//getPlayerCastBan(cid)
+	ScriptEnviroment* env = getScriptEnv();
+	if (Player* player = env->getPlayerByUID(popNumber(L)))
+	{
+		PlayerCast pc = player->getCast();
+		lua_newtable(L);
+		for (AutoList<ProtocolGame>::listiterator it = Player::cSpectators.list.begin(); it != Player::cSpectators.list.end(); ++it)
+		{
+			if (it->second->getPlayer() != player)
+				continue;
+
+			lua_createtable(L,it->first,3);
+			setField(L, "name", it->second->getViewerName());
+			setField(L, "ip", it->second->getIP());
+			lua_settable(L,-3);
+		}
+	}
+	else
+	{
+		reportErrorFunc(getErrorDesc(LUA_ERROR_CREATURE_NOT_FOUND));
+		lua_pushboolean(L, false);
+	}
+
+	return 1;
+}
+
+int LuaScriptInterface::luaDoPlayerRemoveCastBan(lua_State* L)
+{
+	//doPlayerRemoveCastBan(cid, ip)
+	std::string name = popString(L);
+	ScriptEnviroment* env = getScriptEnv();
+	if (Player* player = env->getPlayerByUID(popNumber(L)))
+	{
+		if (player->removeCastBan(name))
+			lua_pushboolean(L, true);
+		else
+			lua_pushboolean(L, false);
+	}
+	else
+	{
+		reportErrorFunc(getErrorDesc(LUA_ERROR_CREATURE_NOT_FOUND));
+		lua_pushboolean(L, false);
+	}
+
+	return 1;
+}
+
+int LuaScriptInterface::luaDoPlayerAddCastBan(lua_State* L)
+{
+	//doPlayerAddCastBan(cid, ip)
+	std::string name = popString(L);
+	ScriptEnviroment* env = getScriptEnv();
+	if (Player* player = env->getPlayerByUID(popNumber(L)))
+	{
+		if (player->addCastBan(name))
+			lua_pushboolean(L, true);
+		else
+			lua_pushboolean(L, false);
+	}
+	else
+	{
+		reportErrorFunc(getErrorDesc(LUA_ERROR_CREATURE_NOT_FOUND));
+		lua_pushboolean(L, false);
+	}
+
+	return 1;
+}
+
+
+int LuaScriptInterface::luaDoPlayerSetCastPassword(lua_State* L)
+{
+	//doPlayerSetCastPassword(cid, password)
+	std::string str = popString(L);
+	ScriptEnviroment* env = getScriptEnv();
+	if (Player* player = env->getPlayerByUID(popNumber(L)))
+	{
+		player->setCastPassword(str);
+		lua_pushboolean(L, true);
+	}
+	else
+	{
+		reportErrorFunc(getErrorDesc(LUA_ERROR_CREATURE_NOT_FOUND));
+		lua_pushboolean(L, false);
+	}
+
+	return 1;
+}
+
+int LuaScriptInterface::luaDoPlayerSetCastDescription(lua_State* L)
+{
+	//doPlayerSetCastPassword(cid, password)
+	std::string str = popString(L);
+	ScriptEnviroment* env = getScriptEnv();
+	if (Player* player = env->getPlayerByUID(popNumber(L)))
+	{
+		player->setCastDescription(str);
+		lua_pushboolean(L, true);
+	}
+	else
+	{
+		reportErrorFunc(getErrorDesc(LUA_ERROR_CREATURE_NOT_FOUND));
+		lua_pushboolean(L, false);
+	}
+
+	return 1;
+}
+
+int LuaScriptInterface::luaDoPlayerSetCastState(lua_State* L)
+{
+	//doPlayerSetCastState(cid, bool)
+	bool state = popBoolean(L);
+	ScriptEnviroment* env = getScriptEnv();
+	if (Player* player = env->getPlayerByUID(popNumber(L)))
+	{
+		player->setCasting(state);
+		lua_pushboolean(L, true);
+	}
+	else
+	{
+		reportErrorFunc(getErrorDesc(LUA_ERROR_CREATURE_NOT_FOUND));
+		lua_pushboolean(L, false);
+	}
+
+	return 1;
+}
+
+int LuaScriptInterface::luaGetPlayerCast(lua_State* L)
+{
+	//getPlayerCast(cid)
+	ScriptEnviroment* env = getScriptEnv();
+	if (const Player* player = env->getPlayerByUID(popNumber(L)))
+	{
+		lua_newtable(L);
+		setFieldBool(L, "status", player->getCastingState());
+		setField(L, "password", player->getCastingPassword());
+		setField(L, "description", player->getCastDescription());
+	}
+	else
+	{
+		reportErrorFunc(getErrorDesc(LUA_ERROR_CREATURE_NOT_FOUND));
+		lua_pushboolean(L, false);
+	}
+
+	return 1;
+}
