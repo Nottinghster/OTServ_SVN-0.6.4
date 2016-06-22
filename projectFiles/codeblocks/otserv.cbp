@@ -1,0 +1,313 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes" ?>
+<CodeBlocks_project_file>
+	<FileVersion major="1" minor="6" />
+	<Project>
+		<Option title="otserv" />
+		<Option pch_mode="2" />
+		<Option compiler="gcc" />
+		<Build>
+			<Target title="Debug Windows">
+				<Option platforms="Windows;" />
+				<Option output="C:/otserv/otserv-debug" prefix_auto="1" extension_auto="1" />
+				<Option working_dir="C:/otserv/" />
+				<Option object_output="obj/Debug/" />
+				<Option type="1" />
+				<Option compiler="gcc" />
+				<Compiler>
+					<Add option="-pg" />
+					<Add option="-g" />
+					<Add option="-D__EXCEPTION_TRACER__" />
+				</Compiler>
+				<Linker>
+					<Add option="-pg -lgmon" />
+					<Add option="-llibxml2" />
+					<Add option="-llibmysql" />
+					<Add option="-llibsqlite3" />
+					<Add option="-lgmp" />
+					<Add option="-llua" />
+					<Add option="-llibboost_system-mgw44-mt-1_41" />
+					<Add option="-llibboost_thread-mgw44-mt-1_41" />
+					<Add option="-llibboost_regex-mgw44-mt-1_41" />
+					<Add option="-lwsock32" />
+					<Add option="-lws2_32" />
+					<Add option="-Wl,-Map=C:\otserv\otserv.map" />
+				</Linker>
+			</Target>
+			<Target title="Release Windows">
+				<Option platforms="Windows;" />
+				<Option output="C:/otserv/otserv" prefix_auto="1" extension_auto="1" />
+				<Option working_dir="C:/otserv/" />
+				<Option object_output="obj/Release/" />
+				<Option type="1" />
+				<Option compiler="gcc" />
+				<Compiler>
+					<Add option="-O2" />
+				</Compiler>
+				<Linker>
+					<Add option="-s" />
+					<Add option="-llibxml2" />
+					<Add option="-llibmysql" />
+					<Add option="-llibsqlite3" />
+					<Add option="-lgmp" />
+					<Add option="-llua" />
+					<Add option="-llibboost_system-mgw44-mt-1_41" />
+					<Add option="-llibboost_thread-mgw44-mt-1_41" />
+					<Add option="-llibboost_regex-mgw44-mt-1_41" />
+					<Add option="-lwsock32" />
+					<Add option="-lws2_32" />
+				</Linker>
+			</Target>
+			<Target title="Debug Unix">
+				<Option platforms="Unix;" />
+				<Option output="../../src/otserv" prefix_auto="0" extension_auto="0" />
+				<Option working_dir="../../src" />
+				<Option type="1" />
+				<Option compiler="gcc" />
+				<Option use_console_runner="0" />
+				<Compiler>
+					<Add option="-pg" />
+					<Add option="-g" />
+					<Add option="-D__DEBUG__XXX" />
+					<Add option="-D__EXCEPTION_TRACER__XXX" />
+					<Add option="-D__DEBUG_SCHEDULER__XXX" />
+					<Add option="-D__DEBUG_NET__XXX" />
+					<Add directory="/usr/include/libxml2/" />
+					<Add directory="/usr/include/lua5.1/" />
+				</Compiler>
+				<Linker>
+					<Add option="-pg" />
+					<Add library="pthread" />
+					<Add library="mysqlclient" />
+					<Add library="xml2" />
+					<Add library="lua5.1" />
+					<Add library="boost_regex" />
+					<Add library="gmp" />
+					<Add library="boost_system" />
+					<Add library="boost_thread" />
+					<Add library="sqlite3" />
+				</Linker>
+			</Target>
+			<Target title="Release Unix">
+				<Option platforms="Unix;" />
+				<Option output="../../src/otserv" prefix_auto="0" extension_auto="0" />
+				<Option working_dir="../../src" />
+				<Option type="1" />
+				<Option compiler="gcc" />
+				<Option use_console_runner="0" />
+				<Compiler>
+					<Add option="-O2" />
+					<Add directory="/usr/include/libxml2/" />
+					<Add directory="/usr/include/lua5.1/" />
+				</Compiler>
+				<Linker>
+					<Add option="-s" />
+					<Add library="pthread" />
+					<Add library="mysqlclient" />
+					<Add library="xml2" />
+					<Add library="lua5.1" />
+					<Add library="boost_regex" />
+					<Add library="gmp" />
+					<Add library="boost_system" />
+					<Add library="boost_thread" />
+					<Add library="sqlite3" />
+				</Linker>
+			</Target>
+		</Build>
+		<VirtualTargets>
+			<Add alias="All" targets="Debug Windows;Release Windows;Debug Unix;Release Unix;" />
+			<Add alias="All Debug" targets="Debug Windows;Debug Unix;" />
+			<Add alias="All Release" targets="Release Windows;Release Unix;" />
+		</VirtualTargets>
+		<Compiler>
+			<Add option="-Wall" />
+			<Add option="-D__USE_MYSQL__" />
+			<Add option="-D__USE_SQLITE__" />
+			<Add option="-Wno-unused-parameter" />
+		</Compiler>
+		<Unit filename="../../AUTHORS" />
+		<Unit filename="../../LICENSE" />
+		<Unit filename="../../README" />
+		<Unit filename="../../README.DATABASE" />
+		<Unit filename="../../config.lua.dist" />
+		<Unit filename="../../otserv.ico" />
+		<Unit filename="../../src/Makefile.am" />
+		<Unit filename="../../src/abstract_lua_t.cpp" />
+		<Unit filename="../../src/abstract_lua_t.h" />
+		<Unit filename="../../src/account.h" />
+		<Unit filename="../../src/actions.cpp" />
+		<Unit filename="../../src/actions.h" />
+		<Unit filename="../../src/admin.cpp" />
+		<Unit filename="../../src/admin.h" />
+		<Unit filename="../../src/allocator.cpp" />
+		<Unit filename="../../src/allocator.h" />
+		<Unit filename="../../src/autogen.sh" />
+		<Unit filename="../../src/ban.cpp" />
+		<Unit filename="../../src/ban.h" />
+		<Unit filename="../../src/baseevents.cpp" />
+		<Unit filename="../../src/baseevents.h" />
+		<Unit filename="../../src/beds.cpp" />
+		<Unit filename="../../src/beds.h" />
+		<Unit filename="../../src/chat.cpp" />
+		<Unit filename="../../src/chat.h" />
+		<Unit filename="../../src/combat.cpp" />
+		<Unit filename="../../src/combat.h" />
+		<Unit filename="../../src/compiler/gcc.h" />
+		<Unit filename="../../src/compiler/mingw32.h" />
+		<Unit filename="../../src/compiler/msvc.h" />
+		<Unit filename="../../src/compiler/workarounds.h" />
+		<Unit filename="../../src/condition.cpp" />
+		<Unit filename="../../src/condition.h" />
+		<Unit filename="../../src/configmanager.cpp" />
+		<Unit filename="../../src/configmanager.h" />
+		<Unit filename="../../src/configure.ac" />
+		<Unit filename="../../src/connection.cpp" />
+		<Unit filename="../../src/connection.h" />
+		<Unit filename="../../src/const.h" />
+		<Unit filename="../../src/container.cpp" />
+		<Unit filename="../../src/container.h" />
+		<Unit filename="../../src/creature.cpp" />
+		<Unit filename="../../src/creature.h" />
+		<Unit filename="../../src/creatureevent.cpp" />
+		<Unit filename="../../src/creatureevent.h" />
+		<Unit filename="../../src/cylinder.cpp" />
+		<Unit filename="../../src/cylinder.h" />
+		<Unit filename="../../src/database.cpp" />
+		<Unit filename="../../src/database.h" />
+		<Unit filename="../../src/databasemysql.cpp" />
+		<Unit filename="../../src/databasemysql.h" />
+		<Unit filename="../../src/databaseodbc.cpp" />
+		<Unit filename="../../src/databaseodbc.h" />
+		<Unit filename="../../src/databasepgsql.cpp" />
+		<Unit filename="../../src/databasepgsql.h" />
+		<Unit filename="../../src/databasesqlite.cpp" />
+		<Unit filename="../../src/databasesqlite.h" />
+		<Unit filename="../../src/definitions.h" />
+		<Unit filename="../../src/depot.cpp" />
+		<Unit filename="../../src/depot.h" />
+		<Unit filename="../../src/enums.h" />
+		<Unit filename="../../src/exception.cpp" />
+		<Unit filename="../../src/exception.h" />
+		<Unit filename="../../src/fileloader.cpp" />
+		<Unit filename="../../src/fileloader.h" />
+		<Unit filename="../../src/game.cpp" />
+		<Unit filename="../../src/game.h" />
+		<Unit filename="../../src/global_list_lua_manager.cpp" />
+		<Unit filename="../../src/global_list_lua_manager.h" />
+		<Unit filename="../../src/global_lists_lua_manager.cpp" />
+		<Unit filename="../../src/global_lists_lua_manager.h" />
+		<Unit filename="../../src/globalevent.cpp" />
+		<Unit filename="../../src/globalevent.h" />
+		<Unit filename="../../src/guild.cpp" />
+		<Unit filename="../../src/guild.h" />
+		<Unit filename="../../src/house.cpp" />
+		<Unit filename="../../src/house.h" />
+		<Unit filename="../../src/housetile.cpp" />
+		<Unit filename="../../src/housetile.h" />
+		<Unit filename="../../src/ioaccount.cpp" />
+		<Unit filename="../../src/ioaccount.h" />
+		<Unit filename="../../src/iomap.h" />
+		<Unit filename="../../src/iomapotbm.cpp" />
+		<Unit filename="../../src/iomapotbm.h" />
+		<Unit filename="../../src/iomapserialize.cpp" />
+		<Unit filename="../../src/iomapserialize.h" />
+		<Unit filename="../../src/ioplayer.cpp" />
+		<Unit filename="../../src/ioplayer.h" />
+		<Unit filename="../../src/item.cpp" />
+		<Unit filename="../../src/item.h" />
+		<Unit filename="../../src/itemloader.h" />
+		<Unit filename="../../src/items.cpp" />
+		<Unit filename="../../src/items.h" />
+		<Unit filename="../../src/logger.cpp" />
+		<Unit filename="../../src/logger.h" />
+		<Unit filename="../../src/luascript.cpp" />
+		<Unit filename="../../src/luascript.h" />
+		<Unit filename="../../src/mailbox.cpp" />
+		<Unit filename="../../src/mailbox.h" />
+		<Unit filename="../../src/map.cpp" />
+		<Unit filename="../../src/map.h" />
+		<Unit filename="../../src/md5.cpp" />
+		<Unit filename="../../src/md5.h" />
+		<Unit filename="../../src/monster.cpp" />
+		<Unit filename="../../src/monster.h" />
+		<Unit filename="../../src/monsters.cpp" />
+		<Unit filename="../../src/monsters.h" />
+		<Unit filename="../../src/movement.cpp" />
+		<Unit filename="../../src/movement.h" />
+		<Unit filename="../../src/networkmessage.cpp" />
+		<Unit filename="../../src/networkmessage.h" />
+		<Unit filename="../../src/npc.cpp" />
+		<Unit filename="../../src/npc.h" />
+		<Unit filename="../../src/otpch.h" />
+		<Unit filename="../../src/otserv.cpp" />
+		<Unit filename="../../src/otsystem.h" />
+		<Unit filename="../../src/outfit.cpp" />
+		<Unit filename="../../src/outfit.h" />
+		<Unit filename="../../src/outputmessage.cpp" />
+		<Unit filename="../../src/outputmessage.h" />
+		<Unit filename="../../src/party.cpp" />
+		<Unit filename="../../src/party.h" />
+		<Unit filename="../../src/player.cpp" />
+		<Unit filename="../../src/player.h" />
+		<Unit filename="../../src/position.cpp" />
+		<Unit filename="../../src/position.h" />
+		<Unit filename="../../src/protocol.cpp" />
+		<Unit filename="../../src/protocol.h" />
+		<Unit filename="../../src/protocolgame.cpp" />
+		<Unit filename="../../src/protocolgame.h" />
+		<Unit filename="../../src/protocollogin.cpp" />
+		<Unit filename="../../src/protocollogin.h" />
+		<Unit filename="../../src/protocolold.cpp" />
+		<Unit filename="../../src/protocolold.h" />
+		<Unit filename="../../src/quests.cpp" />
+		<Unit filename="../../src/quests.h" />
+		<Unit filename="../../src/raids.cpp" />
+		<Unit filename="../../src/raids.h" />
+		<Unit filename="../../src/rsa.cpp" />
+		<Unit filename="../../src/rsa.h" />
+		<Unit filename="../../src/scheduler.cpp" />
+		<Unit filename="../../src/scheduler.h" />
+		<Unit filename="../../src/schema.mysql" />
+		<Unit filename="../../src/schema.pgsql" />
+		<Unit filename="../../src/schema.sqlite" />
+		<Unit filename="../../src/scriptmanager.cpp" />
+		<Unit filename="../../src/scriptmanager.h" />
+		<Unit filename="../../src/server.cpp" />
+		<Unit filename="../../src/server.h" />
+		<Unit filename="../../src/sha1.cpp" />
+		<Unit filename="../../src/sha1.h" />
+		<Unit filename="../../src/spawn.cpp" />
+		<Unit filename="../../src/spawn.h" />
+		<Unit filename="../../src/spells.cpp" />
+		<Unit filename="../../src/spells.h" />
+		<Unit filename="../../src/status.cpp" />
+		<Unit filename="../../src/status.h" />
+		<Unit filename="../../src/talkaction.cpp" />
+		<Unit filename="../../src/talkaction.h" />
+		<Unit filename="../../src/tasks.cpp" />
+		<Unit filename="../../src/tasks.h" />
+		<Unit filename="../../src/teleport.cpp" />
+		<Unit filename="../../src/teleport.h" />
+		<Unit filename="../../src/templates.h" />
+		<Unit filename="../../src/thing.cpp" />
+		<Unit filename="../../src/thing.h" />
+		<Unit filename="../../src/tile.cpp" />
+		<Unit filename="../../src/tile.h" />
+		<Unit filename="../../src/tools.cpp" />
+		<Unit filename="../../src/tools.h" />
+		<Unit filename="../../src/town.h" />
+		<Unit filename="../../src/trashholder.cpp" />
+		<Unit filename="../../src/trashholder.h" />
+		<Unit filename="../../src/vocation.cpp" />
+		<Unit filename="../../src/vocation.h" />
+		<Unit filename="../../src/waitlist.cpp" />
+		<Unit filename="../../src/waitlist.h" />
+		<Unit filename="../../src/weapons.cpp" />
+		<Unit filename="../../src/weapons.h" />
+		<Extensions>
+			<code_completion />
+			<debugger />
+			<envvars />
+		</Extensions>
+	</Project>
+</CodeBlocks_project_file>
+
