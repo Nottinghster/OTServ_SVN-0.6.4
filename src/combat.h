@@ -254,6 +254,14 @@ protected:
 		return NULL;
 	}
 
+	int32_t round(float v) const{
+		int32_t t = (int32_t)std::floor(v);
+		if((v - t) > 0.5){
+			return t + 1;
+		}
+		return t;
+	}
+
 	AreaCombatMap areas;
 	bool hasExtArea;
 };
