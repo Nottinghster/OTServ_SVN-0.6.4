@@ -165,7 +165,7 @@ public:
 		nextSpectator++;
 
 		std::stringstream ss;
-		ss << "Spectator" << cast.curId;
+		ss << "Spectator " << cast.curId;
 		pg->viewerName = ss.str().c_str();
 		cast.curId++;
 	}

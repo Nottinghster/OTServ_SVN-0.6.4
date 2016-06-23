@@ -49,4 +49,6 @@
 	<talkaction words="!houseinfo" access="0" script="houseinfo.lua"/>
 	<talkaction words="!online" access="0" script="onlinelist.lua"/>
 	<talkaction words="!frags" access="0" script="frags.lua"/>
+	<talkaction words="!cast" access="0" filter="first word" script="cast.lua"/>
+	
 </talkactions>

@@ -207,6 +207,16 @@ TalkActionResult_t TalkActions::onPlayerSpeak(Player* player, SpeakClasses type,
 				std::string out = ss.str();
 				pg->publicSendMessage(player, SPEAK_PRIVATE, out);
 			}
+			else if (words.substr(1, 4) == "help")
+			{
+				PlayerCast pc = player->getCast();
+
+				std::stringstream ss, sl;
+				ss << "Commands list: " << " " << "\n/help - Print this message" << " " << "\n/list - Print spectators list" << " " << "\n/name - Change your name";
+				std::string out = ss.str();
+				pg->publicSendMessage(player, SPEAK_PRIVATE, out);
+			}			
+			
 			return TALKACTION_BREAK;
 		}
 		return TALKACTION_CONTINUE;

@@ -412,3 +412,5 @@ sql_port = 3306
 sql_user = "root"
 sql_pass = ""
 
+-- Enable Cast System? (true or false)
+enableCast = true
