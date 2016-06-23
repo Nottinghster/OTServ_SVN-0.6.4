@@ -73,6 +73,9 @@ CREATE TABLE `players` (
 	`online` TINYINT(1) NOT NULL DEFAULT 0,
 	`rank_id` INT NOT NULL COMMENT 'only if you use __OLD_GUILD_SYSTEM__',
 	`guildnick` VARCHAR(255) NOT NULL COMMENT 'only if you use __OLD_GUILD_SYSTEM__',
+	`cast` TINYINT NOT NULL DEFAULT  '0',
+	`castViewers` INT(11) NOT NULL DEFAULT  '0',
+	`castDescription` VARCHAR(255) NOT NULL,	
 
 	PRIMARY KEY (`id`),
 	UNIQUE (`name`),
