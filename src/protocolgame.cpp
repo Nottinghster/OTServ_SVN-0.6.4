@@ -217,18 +217,19 @@ bool ProtocolGame::login(const std::string& name, bool isSetGM, bool castAccount
 		return true;
 	}
 	else{
-		if(eventConnect != 0 && !castAccount){
-			//A task has already been scheduled just bail out (should not be overriden)
-			disconnectClient(0x14, "You are already logged in.");
-			return false;
-		}
-
 		if(_player->client){
+			if(eventConnect != 0 && !castAccount){
+				//A task has already been scheduled just bail out (should not be overriden)
+				disconnectClient(0x14, "You are already logged in.");
+				return false;
+			}
+
 			if (!castAccount) {
 				g_chat.removeUserFromAllChannels(_player);
 				_player->disconnect();
 				_player->isConnecting = true;
 			}
+			
 			addRef();
 			if (!castAccount)
 				eventConnect = g_scheduler.addEvent(
@@ -248,9 +249,7 @@ bool ProtocolGame::login(const std::string& name, bool isSetGM, bool castAccount
 
 bool ProtocolGame::connect(uint32_t playerId, const bool isLoggingIn, bool castAccount)
 {
-	if (!castAccount)
-		unRef();
-	
+	unRef();
 	eventConnect = 0;	
 	
 	Player* _player = g_game.getPlayerByID(playerId);
@@ -2857,8 +2856,10 @@ void ProtocolGame::AddCreatureSpeak(NetworkMessage_ptr msg, const Creature* crea
 					std::string pname;
 					if (pg && pg->getIsCast())
 						pname = pg->viewerName;
+					else if (creature)
+						pname = creature->getName();
 					else
-						pname = speaker->getName();
+						pname = "";
 					
 					msg->AddString(pname);
 				}
