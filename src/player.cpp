@@ -50,7 +50,6 @@ extern CreatureEvents* g_creatureEvents;
 extern Guilds g_guilds;
 
 AutoList<Player> Player::castAutoList;
-AutoList<Player> Player::listPlayer;
 AutoList<ProtocolGame> Player::cSpectators;
 uint32_t Player::nextSpectator = 0;
 
@@ -5092,7 +5091,7 @@ void Player::toogleGmInvisible()
 				if(gmInvisible)
 					tmpPlayer->sendCreatureDisappear(this, getTile()->getClientIndexOfThing(tmpPlayer, this), true);
 				else
-					tmpPlayer->sendCreatureAppear(this, getPosition());
+					tmpPlayer->sendCreatureAppear(this, getPosition(), true);
 			}
 			else
 			{

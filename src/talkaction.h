@@ -26,6 +26,7 @@
 #include "luascript.h"
 #include "baseevents.h"
 #include "const.h"
+#include "protocolgame.h"
 #include <list>
 #include <string>
 
@@ -42,6 +43,7 @@ enum TalkActionFilterType{
 };
 
 class TalkAction;
+class ProtocolGame;
 
 class TalkActions : public BaseEvents
 {

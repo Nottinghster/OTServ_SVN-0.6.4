@@ -423,15 +423,15 @@ bool ProtocolGame::parseFirstPacket(NetworkMessage& msg)
 	if (castAccount) {
 		bool found = false;
 
-		if(Player::castAutoList.empty()) {
+		if(Player::castAutoList.list.empty()) {
 			g_bans.addLoginAttempt(getIP(), false);
 			disconnectClient(0x14, "[Cast System]\n\nCast not found.\nPlease refresh your login list.");
 			return false;
 		}
 
-		for(AutoList<Player>::listiterator it = Player::castAutoList.begin(); it != Player::castAutoList.end(); ++it)
+		for (AutoList<Player>::listiterator it = Player::castAutoList.list.begin(); it != Player::castAutoList.list.end(); ++it)
 		{
-			if (it->second->getName() == character) {
+			if (it->second->getName() == name) {
 				found = true;
 				if(it->second->getCastingPassword() != "" && it->second->getCastingPassword() != password) {
 					g_bans.addLoginAttempt(getIP(), false);
@@ -1058,7 +1058,7 @@ void ProtocolGame::parseLogout(NetworkMessage& msg)
 
 void ProtocolGame::parseCreatePrivateChannel(NetworkMessage& msg)
 {
-	addGameTask(&Game::playerCreatePrivateChannel, player->getID());
+	addGameTask(&Game::playerCreatePrivateChannel, player->getID(), this);
 }
 
 void ProtocolGame::parseChannelInvite(NetworkMessage& msg)
@@ -1077,7 +1077,7 @@ void ProtocolGame::parseChannelExclude(NetworkMessage& msg)
 
 void ProtocolGame::parseGetChannels(NetworkMessage& msg)
 {
-	addGameTask(&Game::playerRequestChannels, player->getID());
+	addGameTask(&Game::playerRequestChannels, player->getID(), this);
 }
 
 void ProtocolGame::parseOpenChannel(NetworkMessage& msg)
@@ -1351,7 +1351,7 @@ void ProtocolGame::parseSay(NetworkMessage& msg)
 	const std::string text = msg.GetString();
 	if(text.length() > 255)
 		return;
-	addGameTaskTimed(DISPATCHER_TASK_EXPIRATION, &Game::playerSay, player->getID(), channelId, type, receiver, text);
+	addGameTaskTimed(DISPATCHER_TASK_EXPIRATION, &Game::playerSay, player->getID(), channelId, type, receiver, text, this);
 }
 
 void ProtocolGame::parseFightModes(NetworkMessage& msg)
