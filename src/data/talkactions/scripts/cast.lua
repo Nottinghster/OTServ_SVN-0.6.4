@@ -152,7 +152,7 @@ function onSay(cid, words, param)
 		end
 		doSavePlayer(cid)
 		doPlayerSendTextMessage(cid, MESSAGE_STATUS_CONSOLE_BLUE, "The cast settings have been updated.")
-		doPlayerSetStorageValue(cid, 656544, os.time() + 60)
+		setPlayerStorageValue(cid, 656544, os.time() + 60)
 	end
 	
 	return false
