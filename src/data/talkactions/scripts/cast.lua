@@ -4,16 +4,21 @@ function onSay(cid, words, param)
 		return doPlayerSendCancel(cid, "Parameters needed")
 	end
 	
+	-- Cast ON
 	if tmp[1] == "on" then
 		doPlayerSendTextMessage(cid, MESSAGE_STATUS_CONSOLE_BLUE, "Cast has started.")
 		doPlayerSetCastState(cid, true)
 		doSavePlayer(cid)
 	elseif getPlayerCast(cid).status == false then
 		return doPlayerSendCancel(cid, "Your cast has to be running for this action.")
+		
+	-- Cast OFF	
 	elseif tmp[1] == "off" then
 		doPlayerSendTextMessage(cid, MESSAGE_STATUS_CONSOLE_BLUE, "Cast has ended.")
 		doPlayerSetCastState(cid, false)
 		doSavePlayer(cid)
+		
+	-- Set Cast Password	
 	elseif isInArray({"pass", "password", "p"}, tmp[1]) then
 		if not(tmp[2]) then
 			return doPlayerSendCancel(cid, "You need to set a password")
@@ -30,6 +35,8 @@ function onSay(cid, words, param)
 			doPlayerSetCastPassword(cid, tmp[2])
 			doPlayerSendTextMessage(cid, MESSAGE_STATUS_CONSOLE_BLUE, "Cast password was set to: " .. tmp[2])
 		end
+		
+	-- Set Cast Description	
 	elseif isInArray({"desc", "description", "d"}, tmp[1]) then
 		local d = param:gsub(tmp[1]..(tmp[2] and " " or ""), "")
 		
@@ -44,6 +51,8 @@ function onSay(cid, words, param)
 		doPlayerSendTextMessage(cid, MESSAGE_STATUS_CONSOLE_BLUE, "Cast description was set to: ")
 		doPlayerSendTextMessage(cid, MESSAGE_STATUS_CONSOLE_BLUE, d)
 		doPlayerSetCastDescription(cid, d)
+		
+	-- Ban Cast Spectators	
 	elseif tmp[1] == "ban" then
 		if not(tmp[2]) then
 			return doPlayerSendCancel(cid, "Specify a spectator that you want to ban.")
@@ -54,6 +63,8 @@ function onSay(cid, words, param)
 		else
 			doPlayerSendTextMessage(cid, MESSAGE_INFO_DESCR, "Spectator '" .. tmp[2] .. "' could not be banned.")
 		end
+		
+	-- UnBan Cast Spectators		
 	elseif tmp[1] == "unban" then
 		if not(tmp[2]) then
 			return doPlayerSendCancel(cid, "Specify the person you want to unban.")
@@ -64,8 +75,10 @@ function onSay(cid, words, param)
 		else
 			doPlayerSendTextMessage(cid, MESSAGE_INFO_DESCR, "Spectator '" .. tmp[2] .. "' could not be unbanned.")
 		end
+		
+	-- Get Cast Banned Spectators	
 	elseif param == "bans" then
-		local t = getCastBans(cid)
+		local t = getPlayerCastBan(cid)
 		local text = "Cast Bans:\n\n"
 		for k, v in pairs(t) do
 			text = text .. "*" .. v.name .. "\n"
@@ -74,6 +87,8 @@ function onSay(cid, words, param)
 			text = text .. "No bans."
 		end
 		doShowTextDialog(cid, 5958, text)
+		
+	-- Mute Cast Spectators	
 	elseif tmp[1] == "mute" then
 		if not(tmp[2]) then
 			return doPlayerSendCancel(cid, "Specify a spectator that you want to mute.")
@@ -84,6 +99,8 @@ function onSay(cid, words, param)
 		else
 			doPlayerSendTextMessage(cid, MESSAGE_INFO_DESCR, "Spectator '" .. tmp[2] .. "' could not be muted.")
 		end
+		
+	-- Unmute Cast Spectators		
 	elseif tmp[1] == "unmute" then
 		if not(tmp[2]) then
 			return doPlayerSendCancel(cid, "Specify the person you want to unmute.")
@@ -94,8 +111,10 @@ function onSay(cid, words, param)
 		else
 			doPlayerSendTextMessage(cid, MESSAGE_INFO_DESCR, "Spectator '" .. tmp[2] .. "' could not be unmuted.")
 		end
+		
+	-- Get Cast Muted Spectators	
 	elseif param == "mutes" then
-		local t = getCastMutes(cid)
+		local t = getPlayerCastMutes(cid)
 		local text = "Cast Mutes:\n\n"
 		for k, v in pairs(t) do
 			text = text .. "*" .. v.name .. "\n"
@@ -104,8 +123,10 @@ function onSay(cid, words, param)
 			text = text .. "No mutes."
 		end
 		doShowTextDialog(cid, 5958, text)
+		
+	-- Get Cast Viewers	
 	elseif param == "viewers" then
-		local t = getCastViewers(cid)
+		local t = getPlayerCastViewers(cid)
 		local text, count = "Cast Viewers:\n#Viewers: |COUNT|\n\n", 0
 		for _,v in pairs(t) do
 			count = count + 1
@@ -115,19 +136,24 @@ function onSay(cid, words, param)
 		if text == "Cast Viewers:\n#Viewers: |COUNT|\n\n" then text = "Cast Viewers:\n\nNo viewers." end
 		text = text:gsub("|COUNT|", count)
 		doShowTextDialog(cid, 5958, text)
+		
+	-- Get Cast Status	
 	elseif param == "status" then
-		local t, c = getCastViewers(cid), getPlayerCast(cid)
+		local t, c = getPlayerCastViewers(cid), getPlayerCast(cid)
 		local count = 0
 		for _,v in pairs(t) do count = count + 1 end
 		
 		doShowTextDialog(cid, 5958, "Cast Status:\n\n*Viewers:\n      " .. count .. "\n*Description:\n      "..(c.description == "" and "Not set" or c.description).."\n*Password:\n      " .. (c.password == "" and "Not set" or "Set - '"..c.password.."'"))
+	
+	-- Update Cast Settings
 	elseif param == "update" then
 		if getPlayerStorageValue(cid, 656544) > os.time() then
-			return doPlayerSendCancel(cid, "You used this command lately. Wait: " .. (getPlayerStorageValue(cid, 656544)-os.time()) .. " sec.")
+			return doPlayerSendCancel(cid, "You used this command lately. Wait: " .. (getPlayerStorageValue(cid, 656544) - os.time()) .. " sec.")
 		end
 		doSavePlayer(cid)
 		doPlayerSendTextMessage(cid, MESSAGE_STATUS_CONSOLE_BLUE, "The cast settings have been updated.")
-		doPlayerSetStorageValue(cid, 656544, os.time()+60)
+		doPlayerSetStorageValue(cid, 656544, os.time() + 60)
 	end
+	
 	return false
 end
