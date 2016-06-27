@@ -1922,7 +1922,7 @@ void ProtocolGame::sendSaleItemList(const std::list<ShopInfo>& shop)
 					int8_t subtype = -1;
 					const ItemType& it = Item::items[sInfo.itemId];
 					if(it.hasSubType() && !it.stackable){
-						subtype = (sInfo.subType == 0 ? -1 :sInfo.subType);
+						subtype = ((sInfo.subType == 0 && !it.isFluidContainer()) ? -1 : sInfo.subType);
 					}
 					uint32_t count = player->__getItemTypeCount(sInfo.itemId, subtype);
 					if(count > 0){
@@ -1947,7 +1947,7 @@ void ProtocolGame::sendSaleItemList(const std::list<ShopInfo>& shop)
 					int8_t subtype = -1;
 					const ItemType& it = Item::items[sInfo.itemId];
 					if(it.hasSubType() && !it.stackable){
-						subtype = (sInfo.subType == 0 ? -1 :sInfo.subType);
+						subtype = ((sInfo.subType == 0 && !it.isFluidContainer()) ? -1 : sInfo.subType);
 					}
 					if(subtype != -1){
 						// This shop item requires extra checks
@@ -3141,18 +3141,25 @@ void ProtocolGame::AddShopItem(NetworkMessage_ptr msg, const ShopInfo item)
 {
 	const ItemType& it = Item::items[item.itemId];
 	msg->AddU16(it.clientId);
+	std::stringstream itemName;
 
 	if(it.stackable || it.charges != 0){
 		msg->AddByte(item.subType);
+		itemName << it.name;
 	}
 	else if(it.isSplash() || it.isFluidContainer()){
 		msg->AddByte(Item::items.getClientFluidType(FluidTypes_t(item.subType)));
+		if(item.subType > 0)
+			itemName << it.name << " of " << Item::items[item.subType].name;
+		else
+			itemName << it.name;		
 	}
 	else{
 		msg->AddByte(1);
+		itemName << it.name;
 	}
 
-	msg->AddString(it.name);
+	msg->AddString(itemName.str());
 	msg->AddU32((uint32_t)(it.weight*100));
 	msg->AddU32(item.buyPrice);
 	msg->AddU32(item.sellPrice);
