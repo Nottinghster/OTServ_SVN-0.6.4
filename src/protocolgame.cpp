@@ -2856,10 +2856,8 @@ void ProtocolGame::AddCreatureSpeak(NetworkMessage_ptr msg, const Creature* crea
 					std::string pname;
 					if (pg && pg->getIsCast())
 						pname = pg->viewerName;
-					else if (creature)
-						pname = creature->getName();
 					else
-						pname = "";
+						pname = creature->getName();
 					
 					msg->AddString(pname);
 				}

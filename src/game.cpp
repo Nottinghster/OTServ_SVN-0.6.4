@@ -3748,7 +3748,7 @@ bool Game::playerTalkToChannel(Player* player, SpeakClasses type, const std::str
 		type = SPEAK_CHANNEL_O;
 	}	
 
-	return g_chat.talkToChannel(player, type, text, channelId);
+	return g_chat.talkToChannel(player, type, text, channelId, pg);
 }
 
 bool Game::playerSpeakToNpc(Player* player, const std::string& text)

@@ -140,7 +140,7 @@ bool ChatChannel::removeUser(Player* player, bool sendCloseChannel /*= false*/)
 	return true;
 }
 
-bool ChatChannel::talk(Player* fromPlayer, SpeakClasses type, const std::string& text, uint32_t time /*= 0*/)
+bool ChatChannel::talk(Player* fromPlayer, SpeakClasses type, const std::string& text, uint32_t time /*= 0*/, ProtocolGame* pg)
 {
 	// Can't speak to a channel you're not connected to
 	UsersMap::const_iterator iter = m_users.find(fromPlayer->getID());
@@ -155,7 +155,7 @@ bool ChatChannel::talk(Player* fromPlayer, SpeakClasses type, const std::string&
 
 	UsersMap::iterator it;
 	for(it = m_users.begin(); it != m_users.end(); ++it){
-		it->second->sendToChannel(fromPlayer, type, text, getId(), time);
+		it->second->sendToChannel(fromPlayer, type, text, getId(), time, pg);
 	}
 
 	return true;
@@ -411,7 +411,7 @@ void Chat::removeUserFromAllChannels(Player* player)
 	}
 }
 
-bool Chat::talkToChannel(Player* player, SpeakClasses type, const std::string& text, uint16_t channelId)
+bool Chat::talkToChannel(Player* player, SpeakClasses type, const std::string& text, uint16_t channelId, ProtocolGame* pg)
 {
 	ChatChannel* channel = getChannel(player, channelId);
 	if(!channel) {
@@ -452,7 +452,7 @@ bool Chat::talkToChannel(Player* player, SpeakClasses type, const std::string& t
 		}
 	}
 
-	if(channel->talk(player, type, text)){
+	if(channel->talk(player, type, text, false, pg)){
 		return true;
 	}
 
