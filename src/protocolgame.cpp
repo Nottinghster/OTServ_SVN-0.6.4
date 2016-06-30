@@ -2862,7 +2862,10 @@ void ProtocolGame::AddCreatureSpeak(NetworkMessage_ptr msg, const Creature* crea
 					msg->AddString(pname);
 				}
 
-				msg->AddU16(speaker->getPlayerInfo(PLAYERINFO_LEVEL));
+				if(type != SPEAK_RVR_ANSWER && (pg == NULL || pg != NULL && !pg->getIsCast()))
+					msg->AddU16(speaker->getPlayerInfo(PLAYERINFO_LEVEL));
+				else
+					msg->AddU16(0x00);
 			}
 		}
 		else{
