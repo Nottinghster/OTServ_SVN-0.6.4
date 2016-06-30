@@ -29,6 +29,7 @@
 
 class Player;
 class Party;
+class ProtocolGame;
 
 typedef std::map<uint32_t, Player*> UsersMap;
 
