@@ -414,3 +414,6 @@ sql_pass = ""
 
 -- Enable Cast System? (true or false)
 enableCast = true
+
+-- Set Cast Viewers Limit
+max_cast_viewers = 50

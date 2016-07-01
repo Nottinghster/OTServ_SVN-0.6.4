@@ -149,13 +149,11 @@ TalkActionResult_t TalkActions::onPlayerSpeak(Player* player, SpeakClasses type,
 					trim(param);
 					if (param.length() > 10)
 					{
-						//pg->sendChannelMessage("[Chat System]", "This name is too long. (Max 8. letters)", MSG_STATUS_DEFAULT, privchannel->getId());
 						pg->publicSendMessage(player, SPEAK_PRIVATE, "This name is too long.");
 						return TALKACTION_BREAK;
 					}
 					else if (param.length() <= 2)
 					{
-						//pg->sendChannelMessage("[Chat System]", "This name is too short. (Min 3. letters)", MSG_STATUS_DEFAULT, privchannel->getId());
 						pg->publicSendMessage(player, SPEAK_PRIVATE, "This name is too short.");
 						return TALKACTION_BREAK;
 					}

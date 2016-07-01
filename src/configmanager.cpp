@@ -224,6 +224,7 @@ bool ConfigManager::loadFile(const std::string& _filename)
 	m_confInteger[USE_RUNE_LEVEL_REQUIREMENTS] = getGlobalBoolean(L, "use_rune_level_requirements", true);
 	m_confInteger[MAX_PACKETS_PER_SECOND] = getGlobalNumber(L, "max_packets_per_second", 50);
 	m_confInteger[ENABLE_CAST] = getGlobalBoolean(L, "enableCast", false);
+	m_confInteger[MAX_CAST_VIEWERS] = getGlobalNumber(L, "max_cast_viewers", 50);
 
 	m_isLoaded = true;
 	return true;

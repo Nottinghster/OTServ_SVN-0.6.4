@@ -263,7 +263,7 @@ bool ProtocolGame::connect(uint32_t playerId, const bool isLoggingIn, bool castA
 				return false;
 			}
 
-		if (_player->getCastViewerCount() >= 50)
+		if (_player->getCastViewerCount() >= g_config.getNumber(ConfigManager::MAX_CAST_VIEWERS))
 		{
 			disconnectClient(0x14, "This cast has reached maximum viewers limit.");
 			return false;

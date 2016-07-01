@@ -180,6 +180,7 @@ public:
 		USE_RUNE_LEVEL_REQUIREMENTS,
 		MAX_PACKETS_PER_SECOND,
 		ENABLE_CAST,
+		MAX_CAST_VIEWERS,
 		LAST_INTEGER_CONFIG /* this must be the last one */
 	};
 

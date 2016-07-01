@@ -177,7 +177,7 @@ bool ProtocolLogin::parseFirstPacket(NetworkMessage& msg)
 			for (AutoList<Player>::listiterator it = Player::castAutoList.list.begin(); it != Player::castAutoList.list.end(); ++it)
 			{
 				std::stringstream ss;
-				ss << (it->second->getCastingPassword() == "" ? "" : it->second->getCastingPassword() != password ? "* " : "") << "L." << it->second->getLevel() << " " << it->second->getCastViewerCount() << "/50";
+				ss << (it->second->getCastingPassword() == "" ? "" : it->second->getCastingPassword() != password ? "* " : "") << "L." << it->second->getLevel() << " " << it->second->getCastViewerCount() << "/" << (int)g_config.getNumber(ConfigManager::MAX_CAST_VIEWERS);
 				output->AddString(it->second->getName());
 				output->AddString(ss.str().c_str());
 				output->AddU32(serverip);
