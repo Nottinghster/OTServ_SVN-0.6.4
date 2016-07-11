@@ -126,7 +126,7 @@ function onSay(cid, words, param)
 		
 	-- Get Cast Viewers	
 	elseif param == "viewers" then
-		local t = getPlayerCastViewers(cid)
+		local t = getPlayerCastViewers(cid, getPlayerIp())
 		local text, count = "Cast Viewers:\n#Viewers: |COUNT|\n\n", 0
 		for _,v in pairs(t) do
 			count = count + 1
@@ -139,7 +139,7 @@ function onSay(cid, words, param)
 		
 	-- Get Cast Status	
 	elseif param == "status" then
-		local t, c = getPlayerCastViewers(cid), getPlayerCast(cid)
+		local t, c = getPlayerCastViewers(cid, getPlayerIp()), getPlayerCast(cid)
 		local count = 0
 		for _,v in pairs(t) do count = count + 1 end
 		
